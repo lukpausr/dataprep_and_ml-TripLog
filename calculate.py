@@ -54,6 +54,7 @@ def get_data(csv):
     return(times_total, times_diff, distances_total, distances_diff)
 
 def calculate_data(times_total, times_diff, distances_total, distances_diff):
+    
     #Berechnen der Geschwindigkeiten
     velocities = [0]
     #in km/h
@@ -73,17 +74,31 @@ def calculate_data(times_total, times_diff, distances_total, distances_diff):
     #Maximal- und Minimalbeschleunigung
     max_acceleration = max(accelerations)
     min_acceleration = min(accelerations)
-
+ 
     #Dauer
     duration = times_total[-1]
 
     #Entfernung
     distance = distances_total[-1]
+   
+    #Daten zusammenfassen
+    #dauer einer Beschleunigung, bremsweg, wartezeiten fehlen
+    data = [avg_velocity, max_velocity, min_acceleration, max_acceleration, duration, distance]
+    data = pd.DataFrame(data=[data], columns = ["Average speed", "Maximum speed", "Minimum acceleration", "Maximum acceleration", "Duration", "Distance"])
+    return(data)
+
+def ml_csv(csv):
+
+    times_total, times_diff, distances_total, distances_diff = get_data(csv)
+    data = calculate_data(times_total, times_diff, distances_total, distances_diff)
+    
+    return(data)
+
+a = r"Z:\2020-JG18-T31Bewegungsanalyse-Pelz-Kroener\05-Messfahrten_Daten\FirebaseStorageTripData\trips\\"
 
 
-            
+#path = r"C:\Studium\5.Semester\Studienarbeit\1608195983032_Car_Electric.csv"
+#csv = pd.read_csv(path, sep = ",")    
+#times_total, times_diff, distances_total, distances_diff = get_data(csv) 
+#calculate_data(times_total, times_diff, distances_total, distances_diff)
 
-path = r"C:\Studium\5.Semester\Studienarbeit\1608195983032_Car_Electric.csv"
-csv = pd.read_csv(path, sep = ",")    
-a,b,c,d = get_data(csv) 
-calculate_data(a,b,c,d)
