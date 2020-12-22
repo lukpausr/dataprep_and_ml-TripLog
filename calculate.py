@@ -71,6 +71,16 @@ def calculate_data(times_total, times_diff, distances_total, distances_diff):
     max_velocity = max(velocities)
     avg_velocity = sum(velocities)/len(velocities)
 
+    #Durchschnittsgeschwindigkeit ohne Geschwindigkeiten < 2km/h (Wartezeiten)
+    times_wo_waiting = []
+    velocities_wo_waiting = []
+    for i in range(len(velocities)):
+        if velocities[i] > 2:
+            velocities_wo_waiting.append(velocities[i])
+            times_wo_waiting.append(times_diff[i])
+
+    avg_velocity_wo_waiting = sum(velocicities_wo_waiting)/len(velocities_wo_waiting)
+
     #Maximal- und Minimalbeschleunigung
     max_acceleration = max(accelerations)
     min_acceleration = min(accelerations)
@@ -83,8 +93,8 @@ def calculate_data(times_total, times_diff, distances_total, distances_diff):
    
     #Daten zusammenfassen
     #dauer einer Beschleunigung, bremsweg, wartezeiten fehlen
-    data = [avg_velocity, max_velocity, min_acceleration, max_acceleration, duration, distance]
-    data = pd.DataFrame(data=[data], columns = ["Average speed", "Maximum speed", "Minimum acceleration", "Maximum acceleration", "Duration", "Distance"])
+    data = [avg_velocity, max_velocity, avg_velocity_wo_waiting, min_acceleration, max_acceleration, duration, distance]
+    data = pd.DataFrame(data=[data], columns = ["Average speed", "Maximum speed", "Average speed without waiting","Minimum acceleration", "Maximum acceleration", "Duration", "Distance"])
     return(data)
 
 def ml_csv(csv):
@@ -94,7 +104,7 @@ def ml_csv(csv):
     
     return(data)
 
-a = r"Z:\2020-JG18-T31Bewegungsanalyse-Pelz-Kroener\05-Messfahrten_Daten\FirebaseStorageTripData\trips\\"
+#a = r"Z:\2020-JG18-T31Bewegungsanalyse-Pelz-Kroener\05-Messfahrten_Daten\FirebaseStorageTripData\trips\\"
 
 
 #path = r"C:\Studium\5.Semester\Studienarbeit\1608195983032_Car_Electric.csv"
