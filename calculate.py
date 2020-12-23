@@ -78,8 +78,13 @@ def calculate_data(times_total, times_diff, distances_total, distances_diff):
         if velocities[i] > 2:
             velocities_wo_waiting.append(velocities[i])
             times_wo_waiting.append(times_diff[i])
+    try:
+        avg_velocity_wo_waiting = sum(velocities_wo_waiting)/len(velocities_wo_waiting)
+    except:
+        avg_velocity_wo_waiting = None
 
-    avg_velocity_wo_waiting = sum(velocicities_wo_waiting)/len(velocities_wo_waiting)
+    #Wartezeiten
+    waiting_duration = times_total[-1] - sum(times_wo_waiting)
 
     #Maximal- und Minimalbeschleunigung
     max_acceleration = max(accelerations)
@@ -92,16 +97,16 @@ def calculate_data(times_total, times_diff, distances_total, distances_diff):
     distance = distances_total[-1]
    
     #Daten zusammenfassen
-    #dauer einer Beschleunigung, bremsweg, wartezeiten fehlen
-    data = [avg_velocity, max_velocity, avg_velocity_wo_waiting, min_acceleration, max_acceleration, duration, distance]
-    data = pd.DataFrame(data=[data], columns = ["Average speed", "Maximum speed", "Average speed without waiting","Minimum acceleration", "Maximum acceleration", "Duration", "Distance"])
+    #dauer einer Beschleunigung, bremsweg
+    data = [avg_velocity, max_velocity, min_acceleration, max_acceleration, duration, distance, waiting_duration, avg_velocity_wo_waiting]
+    data = pd.DataFrame(data=[data], columns = ["Average speed", "Maximum speed","Minimum acceleration", "Maximum acceleration", "Duration", "Distance","Time of waiting", "Average speed without waiting"])
     return(data)
 
 def ml_csv(csv):
 
     times_total, times_diff, distances_total, distances_diff = get_data(csv)
-    data = calculate_data(times_total, times_diff, distances_total, distances_diff)
-    
+    data = calculate_data(times_total, times_diff, distances_total, distances_diff) 
+
     return(data)
 
 #a = r"Z:\2020-JG18-T31Bewegungsanalyse-Pelz-Kroener\05-Messfahrten_Daten\FirebaseStorageTripData\trips\\"

@@ -18,16 +18,13 @@ def gpx_import(path):
 
 def csv_import(path):        
     csv = pd.read_csv(path, sep = ",")    
-  
     ml_csv = calculate.ml_csv(csv)    
-    print("hi")     
     return(ml_csv)
     
 
 def data_import():
 
     for files in os.listdir(path):
-        print(files)
         for data in os.listdir(path + files + "/"):
             #Labels extrahieren
             split = data.split(".")
@@ -55,7 +52,7 @@ def data_import():
 
                 #ML-CSV erstellen
                 try:               
-                     ml_csv = pd.concat([ml_csv, dataFrame])
+                    ml_csv = pd.concat([ml_csv, dataFrame])
                 except:
                     ml_csv = dataFrame
     
