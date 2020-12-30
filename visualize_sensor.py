@@ -4,18 +4,22 @@ import os
 
 path = r"Z:\2020-JG18-T31Bewegungsanalyse-Pelz-Kroener\05-Messfahrten_Daten\Sensor Datenrate"
 
-def average_time(csv):
+def average_time(csv, pos):
     lists = []
     for i in range(1,len(csv)):
-        a = (csv["Time_in_ns"][i] - csv["Time_in_ns"][i-1])
+        a = (csv[pos][i] - csv[pos][i-1])
         lists.append(a/1000000)
     #print(len(lists))
     return(sum(lists)/len(lists))
 
 def plots(csv, savepath):
     data = csv
-    start, end = start_end(savepath)
-    #ACC
+    
+    # ACC
+    avg_time = average_time(csv, "Time_in_ns")
+    print(avg_time)
+    start, end = start_end(savepath, avg_time)
+    
     time_acc = list(data["Time_in_ns"])
     begin = time_acc[start]
     for i in range(len(time_acc)):
@@ -37,9 +41,13 @@ def plots(csv, savepath):
     axs[2].set(xlabel='Zeit', ylabel='ACC_Z')
 
     plt.subplots_adjust(bottom = 0.06, top = 0.9)
-    fig.savefig(savepath + "acc.png")
+    fig.savefig(savepath + "acc.pdf", dpi=1200)
 
     #LINEAR_ACC
+    avg_time = average_time(csv, "Time_in_ns.1")
+    print(avg_time)
+    start, end = start_end(savepath, avg_time)
+    
     time_acc1 = list(data["Time_in_ns.1"])
     begin = time_acc1[0]
     for i in range(len(time_acc1)):
@@ -49,7 +57,7 @@ def plots(csv, savepath):
     linear_acc_y = list(data["LINEAR_ACC_Y"])[start:end]
     linear_acc_z = list(data["LINEAR_ACC_Z"])[start:end]
 
-    #plot
+    # plot
     fig, axs = plt.subplots(3)
     fig.suptitle('Sensordaten')
     axs[0].plot(time_acc1, linear_acc_x)
@@ -61,9 +69,13 @@ def plots(csv, savepath):
     axs[2].set(xlabel='Zeit', ylabel='LINEAR_ACC_Z')
 
     plt.subplots_adjust(bottom = 0.06, top = 0.9)
-    fig.savefig(savepath + "linear_acc.png")
+    fig.savefig(savepath + "linear_acc.pdf", dpi=1200)
 
-    #W
+    # W
+    avg_time = average_time(csv, "Time_in_ns.2")
+    print(avg_time)
+    start, end = start_end(savepath, avg_time)
+    
     time_acc2 = list(data["Time_in_ns.2"])
     begin = time_acc2[0]
     for i in range(len(time_acc2)):
@@ -73,7 +85,7 @@ def plots(csv, savepath):
     w_Y = list(data["w_Y"])[start:end]
     w_Z = list(data["w_Z"])[start:end]
 
-    #plot
+    # plot
     fig, axs = plt.subplots(3)
     fig.suptitle('Sensordaten')
     axs[0].plot(time_acc2, w_X)
@@ -85,29 +97,31 @@ def plots(csv, savepath):
     axs[2].set(xlabel='Zeit', ylabel='W_Z')
 
     plt.subplots_adjust(bottom = 0.06, top = 0.9)
-    fig.savefig(savepath + "w.png")
+    fig.savefig(savepath + "w.pdf", dpi=1200)
 
-def start_end(csvpath):
-    #print(csvpath)
+def start_end(csvpath, avg_time):
+    print(csvpath)
+    avg_time = avg_time / 1000
+    avg_time = 1 / avg_time
     if "100_Hz" in csvpath:
-        start = 100*10
-        end = 100*20
+        start = avg_time*15
+        end = avg_time*25
         print("Anfallende Daten pro Minute: 6000")
     elif "50_Hz" in csvpath:
-        start = 50*10
-        end = 50*20
+        start = avg_time*15
+        end = avg_time*25
         print("Anfallende Daten pro Minute: 3000")
     elif "20_Hz" in csvpath:
-        start = 20*10
-        end = 20*20
+        start = avg_time*15
+        end = avg_time*25
         print("Anfallende Daten pro Minute: 1200")
     elif "10_Hz" in csvpath:
-        start = 10*10
-        end = 10*20
+        start = avg_time*15
+        end = avg_time*25
         print("Anfallende Daten pro Minute: 600")
     else:
         print("INVALID PATH")
-    return(start, end)
+    return(int(start), int(end))
 
 
 for folder in os.listdir(path):
@@ -117,7 +131,11 @@ for folder in os.listdir(path):
             None
         else:
             csv = pd.read_csv(csvpath+"/"+csvdata, sep = ",")
-            #print((csv["Time_in_ns"][len(csv)-1] - csv["Time_in_ns"][0])/1000000)
-            print(average_time(csv))
-            plots(csv, csvpath)
-
+            if("V1" in csvdata):
+                print("-----------")
+                # print(csvpath+"/"+csvdata)
+                # print((csv["Time_in_ns"][len(csv)-1] - csv["Time_in_ns"][0])/1000000)
+                # print(average_time(csv))
+                # avg_time = average_time(csv)
+                plots(csv, csvpath)
+                print("-----------")
