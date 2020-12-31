@@ -50,7 +50,7 @@ def get_data(csv):
         total = total + dist
         distances_total.append(total)
         distances_diff.append(dist)
-    
+    #times in s
     return(times_total, times_diff, distances_total, distances_diff)
 
 def calculate_data(times_total, times_diff, distances_total, distances_diff):
@@ -109,11 +109,9 @@ def ml_csv(csv):
 
     return(data)
 
-#a = r"Z:\2020-JG18-T31Bewegungsanalyse-Pelz-Kroener\05-Messfahrten_Daten\FirebaseStorageTripData\trips\\"
-
-
-#path = r"C:\Studium\5.Semester\Studienarbeit\1608195983032_Car_Electric.csv"
-#csv = pd.read_csv(path, sep = ",")    
-#times_total, times_diff, distances_total, distances_diff = get_data(csv) 
-#calculate_data(times_total, times_diff, distances_total, distances_diff)
+if __name__ == "__MAIN__":
+    path = r"C:\Studium\5.Semester\Studienarbeit\1608195983032_Car_Electric.csv"
+    csv = pd.read_csv(path, sep = ",")    
+    times_total, times_diff, distances_total, distances_diff = get_data(csv) 
+    calculate_data(times_total, times_diff, distances_total, distances_diff)
 

@@ -10,7 +10,7 @@ def average_time(csv, pos):
         a = (csv[pos][i] - csv[pos][i-1])
         lists.append(a/1000000)
     #print(len(lists))
-    return(sum(lists)/len(lists))
+    return(sum(lists)/len(lists)) # return in ms
 
 def plots(csv, savepath):
     data = csv
@@ -123,19 +123,19 @@ def start_end(csvpath, avg_time):
         print("INVALID PATH")
     return(int(start), int(end))
 
-
-for folder in os.listdir(path):
-    csvpath = path + "/" + folder
-    for csvdata in os.listdir(csvpath):
-        if "GPS" in (csvpath+"/"+csvdata):
-            None
-        else:
-            csv = pd.read_csv(csvpath+"/"+csvdata, sep = ",")
-            if("V1" in csvdata):
-                print("-----------")
-                # print(csvpath+"/"+csvdata)
-                # print((csv["Time_in_ns"][len(csv)-1] - csv["Time_in_ns"][0])/1000000)
-                # print(average_time(csv))
-                # avg_time = average_time(csv)
-                plots(csv, csvpath)
-                print("-----------")
+if __name__ == "__MAIN__":
+    for folder in os.listdir(path):
+        csvpath = path + "/" + folder
+        for csvdata in os.listdir(csvpath):
+            if "GPS" in (csvpath+"/"+csvdata):
+                None
+            else:
+                csv = pd.read_csv(csvpath+"/"+csvdata, sep = ",")
+                if("V1" in csvdata):
+                    print("-----------")
+                    # print(csvpath+"/"+csvdata)
+                    # print((csv["Time_in_ns"][len(csv)-1] - csv["Time_in_ns"][0])/1000000)
+                    # print(average_time(csv))
+                    # avg_time = average_time(csv)
+                    plots(csv, csvpath)
+                    print("-----------")
