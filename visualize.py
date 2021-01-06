@@ -94,13 +94,13 @@ def calculateValues(path, jumpSize = 1):
 
 def printMultiplot(x_axis, y_axis, x_label, y_label, label, save_path=None):
     
-    plt.rcParams["figure.figsize"] = (20,8)
+    plt.rcParams["figure.figsize"] = (20,10)
     
     for i in range(len(x_axis)):
         plt.plot(x_axis[i], y_axis[i], label=label[i])
         
-    plt.ylabel(y_label)
-    plt.xlabel(x_label)
+    plt.ylabel(y_label, fontsize =20)
+    plt.xlabel(x_label, fontsize =20)
     plt.legend(loc='best')
 
     if save_path is None:
