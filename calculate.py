@@ -2,8 +2,27 @@ import pandas as pd
 from gpx_csv_converter import Converter
 from math import sin, cos, sqrt, atan2, radians
 
-#Funktion um Distanz (m) zw. zwei GPS-Punkten zu bestimmen
+# Funktion um Distanz (m) zw. zwei GPS-Punkten zu bestimmen
 def calc_distance(lat1, lon1, lat2, lon2):
+    """
+    Berechnet die Distanz zwischen zwei GPS Punkten in m.
+    
+    Parameters
+    ----------
+    lat1 : Numpy.Float
+        Breitengrad von GPS-Punkt 1.
+    lon1 : Numpy.Float
+        Längengrad von GPS-Punkt 1.
+    lat2 : Numpy.Float
+        Breitengrad von GPS-Punkt 2.
+    lon2 : Numpy.Float
+        Längengrad von GPS-Punkt 2.
+
+    Returns
+    -------
+    Distanz in m.
+
+    """
     lat1 = radians(lat1)
     lon1 = radians(lon1)
     lat2 = radians(lat2)
@@ -12,23 +31,41 @@ def calc_distance(lat1, lon1, lat2, lon2):
     dlon = lon2 - lon1
     dlat = lat2 - lat1
 
+    # Haversine Formula
     a = sin(dlat / 2)**2 + cos(lat1) * cos(lat2) * sin(dlon / 2)**2
     c = 2 * atan2(sqrt(a), sqrt(1 - a))
 
-    # approximate radius of earth in km
+    # Abschätzung der Strecke auf Basis des Erdradius in km
     R = 6373.0
     distance = R * c
     distance = 1000*distance
 
-    #returns Meter
+    # Return Meter
     return(distance)
 
 def get_data(csv):
-    #Startzeitpunkt ermitteln
+    """
+    Aus der übergebenen csv-Datei werden die relevanten Werte (Zeiten, Distanzen)
+    entnommen und in Listen gespeichert.
+
+    Parameters
+    ----------
+    csv : Pandas DataFrame
+        DataFrame einer csv-Datei.
+
+    Returns
+    -------
+    list[float]: Liste mit den Zeiten (total)
+    List[float]: Liste mit den Zeitdifferenzen
+    List[float]: Liste mit der Gesamtstrecke
+    List[float]: Liste mit den Streckendifferenzen        
+
+    """
+    # Startzeitpunkt ermitteln
     time_in_s = csv["Time_in_s"]
     begin = time_in_s[0]
 
-    #Zeitpunkte in Listen speichern
+    # Zeitpunkte in Listen speichern
     times_total = [0]
     times_diff = [0]        
        
@@ -36,11 +73,12 @@ def get_data(csv):
         times_total.append(time_in_s[i] - begin)
         times_diff.append(time_in_s[i]-time_in_s[i-1])
 
-    #Distanzen
+    # Distanzen
     lats = csv["Latitude"]
     lons = csv["Longitude"]
-
-    #Distanzen in Listen speichern
+    
+    print(type(lats[0]))
+    # Distanzen in Listen speichern
     distances_total = [0]
     distances_diff = [0]
 
@@ -50,11 +88,25 @@ def get_data(csv):
         total = total + dist
         distances_total.append(total)
         distances_diff.append(dist)
-    #times in s
+    # Zeiten in Sekunden
     return(times_total, times_diff, distances_total, distances_diff)
 
 def calculate_data(times_total, times_diff, distances_total, distances_diff):
+    """
+    Berechnet aus den Daten von get_data() die Features der GPS-Daten.
+
+    Parameters
+    ----------
+    times_total : List[float]
+    times_diff : List[float]
+    distances_total : List[float]
+    distances_diff : List[float]
     
+    Returns
+    -------
+    DataFrame mit den ml-Features der GPS-Daten.
+
+    """
     #Berechnen der Geschwindigkeiten
     velocities = [0]
     #in km/h
@@ -103,7 +155,19 @@ def calculate_data(times_total, times_diff, distances_total, distances_diff):
     return(data)
 
 def ml_csv(csv):
+    """
+    Erstellt aus dem DataFrame einer csv-Datei ein DataFrame mit den ML-Features.
 
+    Parameters
+    ----------
+    csv : Pandas.DataFrame
+        Eine GPS-Datei, die in einem DataFrame eingelesen wurde.
+
+    Returns
+    -------
+    DataFrame mit ML-Features.
+
+    """
     times_total, times_diff, distances_total, distances_diff = get_data(csv)
     data = calculate_data(times_total, times_diff, distances_total, distances_diff) 
 
@@ -114,4 +178,3 @@ if __name__ == "__MAIN__":
     csv = pd.read_csv(path, sep = ",")    
     times_total, times_diff, distances_total, distances_diff = get_data(csv) 
     calculate_data(times_total, times_diff, distances_total, distances_diff)
-
