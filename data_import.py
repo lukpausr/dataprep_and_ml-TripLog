@@ -3,6 +3,13 @@ import pandas as pd
 import calculate
 import numpy as np 
 
+import constants as C
+
+pd.set_option('display.max_columns', None)  # or 1000
+pd.set_option('display.max_rows', None)  # or 1000
+pd.set_option('display.max_colwidth', -1)  # or 199
+
+
 class Record:
     def __init__(self, path_gps, path_sensor, label = "", sublabel = "", subsublabel = ""):
         self.path_gps = path_gps
@@ -120,11 +127,58 @@ def preperate_sensor(record):
 
     if os.path.isfile(record.path_sensor):
         df = pd.read_csv(record.path_sensor, sep = ",")
+        
+        # =====================================================================
+        # Convert ns-Timestamp to Timedelta   
+        # =====================================================================
+        #df['td_acc'] = pd.to_datetime(df['Time_in_ns'], unit='ns')
+        #df['td_linearAcc'] = pd.to_timedelta(df['Time_in_ns.1'], 'ns')
+        #df['td_gyro'] = pd.to_timedelta(df['Time_in_ns.1'], 'ns')
         # print(df.head(20))
-    
-        #resampled = df.resample
-    
-    
+        
+        # =====================================================================
+        # Prepare Data for Resampling
+        # =====================================================================
+        start_time = df['Time_in_ns'].iloc[0]
+        df['Time_in_ns'] = df['Time_in_ns'] - start_time
+
+        df_accData = df[['ACC_X', 'ACC_Y', 'ACC_Z']].copy()
+        df_accData.index = pd.to_datetime(df['Time_in_ns'], unit = 'ns')
+        
+        df_laccData = df[['LINEAR_ACC_X', 'LINEAR_ACC_Y', 'LINEAR_ACC_Z']].copy()
+        df_laccData.index = pd.to_datetime(df['Time_in_ns.1'], unit = 'ns')
+        
+        df_gyroData = df[['w_X', 'w_Y', 'w_Z']].copy()
+        df_gyroData.index = pd.to_datetime(df['Time_in_ns.2'], unit = 'ns')
+        
+        print(df.head(20))
+        print(df_accData.head(20))
+        print(df_laccData.head(20))
+        print(df_gyroData.head(20))
+        
+        # =====================================================================
+        # Resampling der Daten
+        # https://stackoverflow.com/questions/47148446/pandas-resample-interpolate-is-producing-nans?noredirect=1&lq=1
+        # =====================================================================
+        oidx = df_accData.index
+        nidx = pd.date_range(oidx.min(), oidx.max(), freq='20ms')
+        df_res_acc = df_accData.reindex(oidx.union(nidx)).interpolate('index').reindex(nidx)
+        
+        oidx = df_laccData.index
+        nidx = pd.date_range(oidx.min(), oidx.max(), freq='20ms')
+        df_res_lacc = df_accData.reindex(oidx.union(nidx)).interpolate('index').reindex(nidx)
+        
+        oidx = df_gyroData.index
+        nidx = pd.date_range(oidx.min(), oidx.max(), freq='20ms')
+        df_res_gyro = df_accData.reindex(oidx.union(nidx)).interpolate('index').reindex(nidx)
+        
+        # res.to_excel('Test.xlsx')
+        
+        # =====================================================================
+        # Abschneiden von Start und Ende der Daten      
+        # =====================================================================
+        
+  
     
 def preperate_data(records):
     for record in records:
