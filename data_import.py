@@ -2,12 +2,14 @@ import os
 import pandas as pd 
 import calculate
 import numpy as np 
+import multiprocessing
+import asyncio
 
 import constants as C
 
 pd.set_option('display.max_columns', None)  # or 1000
 pd.set_option('display.max_rows', None)  # or 1000
-pd.set_option('display.max_colwidth', -1)  # or 199
+pd.set_option('display.max_colwidth', None)  # or 199
 
 
 class Record:
@@ -28,6 +30,15 @@ class Record:
         print("Sublabel: ", self.sublabel)
         print("SubSubLabel: ", self.subsublabel)
         print("#####################")
+        
+class SensorDatapoint:
+    def __init__(self, acc_path, lacc_path, gyro_path, label, sublabel, subsublabel):
+        self.acc_path = acc_path
+        self.lacc_path = lacc_path
+        self.gyro_path = gyro_path
+        self.label = label
+        self.sublabel = sublabel
+        self.subsublabel = subsublabel
 
 def csv_import(path):
     """
@@ -119,7 +130,23 @@ def preperate_gps(record):
         dataFrame = pd.DataFrame(columns=["Average speed", "Maximum speed", "Average speed without waiting","Minimum acceleration", "Maximum acceleration", "Duration", "Distance"])
 
 
-def preperate_sensor(record):
+def interpolate_data(df):
+    # =========================================================================
+    # Resampling der Daten
+    # https://stackoverflow.com/questions/47148446/pandas-resample-interpolate-is-producing-nans?noredirect=1&lq=1
+    # =========================================================================
+    oidx = df.index
+    nidx = pd.date_range(oidx.min(), oidx.max(), freq = C.INTERPOLATE_FREQUENCY)
+    df_res = df.reindex(oidx.union(nidx)).interpolate('index').reindex(nidx)
+    return df_res
+
+async def reindex_and_interpolate(df):
+    oidx = df.index
+    nidx = pd.date_range(oidx.min(), oidx.max(), freq='20ms')
+    df_res = df.reindex(oidx.union(nidx)).interpolate('index').reindex(nidx)
+    return df_res
+
+async def preperate_sensor(record):
 # =============================================================================
 # Alles was mit Sensor Dateien zu tun hat - Resampling, Berechnen von
 # Features etc
@@ -127,20 +154,21 @@ def preperate_sensor(record):
 
     if os.path.isfile(record.path_sensor):
         df = pd.read_csv(record.path_sensor, sep = ",")
-        
-        # =====================================================================
-        # Convert ns-Timestamp to Timedelta   
-        # =====================================================================
-        #df['td_acc'] = pd.to_datetime(df['Time_in_ns'], unit='ns')
-        #df['td_linearAcc'] = pd.to_timedelta(df['Time_in_ns.1'], 'ns')
-        #df['td_gyro'] = pd.to_timedelta(df['Time_in_ns.1'], 'ns')
-        # print(df.head(20))
-        
+                
         # =====================================================================
         # Prepare Data for Resampling
         # =====================================================================
+        df = df[:-2]
+        
         start_time = df['Time_in_ns'].iloc[0]
         df['Time_in_ns'] = df['Time_in_ns'] - start_time
+        
+        start_time = df['Time_in_ns.1'].iloc[0]
+        df['Time_in_ns.1'] = df['Time_in_ns.1'] - start_time
+        
+        start_time = df['Time_in_ns.2'].iloc[0]
+        df['Time_in_ns.2'] = df['Time_in_ns.2'] - start_time
+        
 
         df_accData = df[['ACC_X', 'ACC_Y', 'ACC_Z']].copy()
         df_accData.index = pd.to_datetime(df['Time_in_ns'], unit = 'ns')
@@ -151,45 +179,120 @@ def preperate_sensor(record):
         df_gyroData = df[['w_X', 'w_Y', 'w_Z']].copy()
         df_gyroData.index = pd.to_datetime(df['Time_in_ns.2'], unit = 'ns')
         
-        print(df.head(20))
-        print(df_accData.head(20))
-        print(df_laccData.head(20))
-        print(df_gyroData.head(20))
+        #print("Kopieren erledigt")
+        # print(df.head(20))
+        # print(df_accData.head(20))
+        # print(df_laccData.head(20))
+        # print(df_gyroData.head(20))
         
         # =====================================================================
         # Resampling der Daten
         # https://stackoverflow.com/questions/47148446/pandas-resample-interpolate-is-producing-nans?noredirect=1&lq=1
         # =====================================================================
-        oidx = df_accData.index
-        nidx = pd.date_range(oidx.min(), oidx.max(), freq='20ms')
-        df_res_acc = df_accData.reindex(oidx.union(nidx)).interpolate('index').reindex(nidx)
+        import time        
         
-        oidx = df_laccData.index
-        nidx = pd.date_range(oidx.min(), oidx.max(), freq='20ms')
-        df_res_lacc = df_accData.reindex(oidx.union(nidx)).interpolate('index').reindex(nidx)
+        start = time.time()
+        print("Start Interpolation")
         
-        oidx = df_gyroData.index
-        nidx = pd.date_range(oidx.min(), oidx.max(), freq='20ms')
-        df_res_gyro = df_accData.reindex(oidx.union(nidx)).interpolate('index').reindex(nidx)
+        acc = asyncio.create_task(reindex_and_interpolate(df_accData))
+        lacc = asyncio.create_task(reindex_and_interpolate(df_laccData))
+        gyro = asyncio.create_task(reindex_and_interpolate(df_gyroData))
         
-        # res.to_excel('Test.xlsx')
+        df_res_acc = await acc
+        df_res_lacc = await lacc
+        df_res_gyro = await gyro
+        
+        end = time.time()
+        print("--> Finished: ", end - start)
         
         # =====================================================================
         # Abschneiden von Start und Ende der Daten      
         # =====================================================================
+        ptbc_s = C.SECONDS_CUT_START * 50           # Points to be cut (start)
+        ptbc_e = C.SECONDS_CUT_END * 50             # Points to be cut (end)
+        pt_seg = C.SECONDS_SENSOR_SEGMENT * 50      # Points per segment
+                                                    # 50 Points per second
+                                            
+        df_res_acc = df_res_acc[ptbc_s:len(df_res_gyro)-ptbc_e]
+        df_res_lacc = df_res_lacc[ptbc_s:len(df_res_gyro)-ptbc_e]
+        df_res_gyro = df_res_gyro[ptbc_s:len(df_res_gyro)-ptbc_e]
         
-  
-    
-def preperate_data(records):
+        # =====================================================================
+        # Speichern von Datensegmenten mit festgelegter Segmentgröße und
+        # Überlappung von 50 Prozent als Pickle Files und Ablegen der
+        # Dateipfade in CSV Datei
+        # =====================================================================
+                
+        label = record.label
+        sublabel = record.sublabel
+        subsublabel = record.subsublabel     
+        
+        for i in range(0, len(df_res_acc)-pt_seg, int(pt_seg/2)):
+            
+            path = str(time.time_ns())
+            path = C.SENSOR_DATA_SEGMENT_FOLDER + path
+            
+            df_toSave_acc = pd.DataFrame()
+            df_toSave_acc = df_res_acc[i:i+pt_seg]
+            df_toSave_acc.to_pickle(path + "_acc.pkl", protocol = 2)
+            
+            df_toSave_lacc = pd.DataFrame()
+            df_toSave_lacc = df_res_lacc[i:i+pt_seg]   
+            df_toSave_acc.to_pickle(path + "_lacc.pkl", protocol = 2)
+            
+            df_toSave_gyro = pd.DataFrame()
+            df_toSave_gyro = df_res_gyro[i:i+pt_seg] 
+            df_toSave_acc.to_pickle(path + "_gyro.pkl", protocol = 2)
+            
+            obj = SensorDatapoint(
+                path + "_acc.pkl", 
+                path + "_lacc.pkl", 
+                path + "_gyro.pkl", 
+                label, sublabel, subsublabel
+            )
+                     
+            record.splitted_sensor.append(obj)
+            
+async def totalSensorSegments(records):
+    counter = 0
     for record in records:
-        
-        ### GPS Preperation ###
-        # preperate_gps(record)
-        
-        ### Sensor Preperation ###
-        preperate_sensor(record)
+        counter = counter + len(record.splitted_sensor)  
+    return counter
     
-def read_labels(file):
+async def preperate_data(records):
+        
+    count = list(range(len(records)))
+        
+    for record, i in zip(records, count):
+        
+        if(True):
+            
+            #print("File: ", record.path_sensor)
+            ### GPS Preperation ###
+            # preperate_gps(record)
+            
+            ### Sensor Preperation ###
+            #print(record.path_sensor)
+            
+            
+            
+            print("Dateipfad: ", record.path_sensor)
+            print("File ", i, " of ", len(records))
+            try:
+                size = os.path.getsize(record.path_sensor)
+                print('File size: ' + str(round(size / (1024 * 1024), 3)) + ' Megabytes')
+            except:
+                print("Datei nicht verfügbar!")
+            
+            try:
+                await preperate_sensor(record)
+            except:
+                pass
+        
+    segment_count = await totalSensorSegments(records)
+    print("Total sensor segments: ", segment_count)
+    
+async def read_labels(file):
     label = ["", "", ""]
     
     # Labels extrahieren
@@ -206,7 +309,7 @@ def read_labels(file):
         
     return label
       
-def collect_files(path):
+async def collect_files(path):
     records = []
     
     # Durchläuft alle User-Ordner
@@ -219,7 +322,7 @@ def collect_files(path):
                 path_gps = path + folder + "/" + file
                 path_sensor = path + folder + "/" + file[:-7] + "SENSOR.csv"
                 
-                labels = read_labels(file)
+                labels = await read_labels(file)
                 
                 records.append(
                     Record(
@@ -236,18 +339,26 @@ def collect_files(path):
 
 # =============================================================================
 # Hauptprogramm
-# =============================================================================
-path = "Z:/2020-JG18-T31Bewegungsanalyse-Pelz-Kroener/05-Messfahrten_Daten/FirebaseStorageTripData/trips/"
-save_path_gps = "Z:/2020-JG18-T31Bewegungsanalyse-Pelz-Kroener/06-Datenaufbereitung/processedData/ml_gps.csv"
-
-if(__name__ == "__main__"):
-    
-    records = collect_files(path)
+# ============================================================================= 
+async def main():
+    records = await collect_files(path)
     
     # Anzahl der aufgenommenen Datensätze
     print(len(records))
     
-    preperate_data(records)
+    await preperate_data(records)
     
     # ml_csv = data_import(path)
     # ml_csv.to_csv(save_path_gps)
+    
+path = "Z:/2020-JG18-T31Bewegungsanalyse-Pelz-Kroener/05-Messfahrten_Daten/FirebaseStorageTripData/trips/"
+save_path_gps = "Z:/2020-JG18-T31Bewegungsanalyse-Pelz-Kroener/06-Datenaufbereitung/processedData/ml_gps.csv"
+
+if(__name__ == "__main__"):
+    import nest_asyncio
+    nest_asyncio.apply()
+    
+    asyncio.run(main())
+    
+    
+    
