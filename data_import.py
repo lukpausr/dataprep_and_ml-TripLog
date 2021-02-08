@@ -292,6 +292,26 @@ async def preperate_data(records):
     segment_count = await totalSensorSegments(records)
     print("Total sensor segments: ", segment_count)
     
+async def writeSensorSegmentCSV(records):
+    
+    counter = 0
+    df = pd.DataFrame(columns=['accFile', 'laccFile', 'gyroFile', 'Label', 'Sublabel', 'Subsublabel'])
+    
+    for record in records:
+        for segment in record.splitted_sensor:
+            df.loc[counter] = [
+                segment.acc_path, 
+                segment.lacc_path, 
+                segment.gyro_path, 
+                segment.label, 
+                segment.sublabel, 
+                segment.subsublabel
+            ]
+            counter = counter + 1
+    
+    df.to_csv(C.SENSOR_DATA_CSV)
+        
+        
 async def read_labels(file):
     label = ["", "", ""]
     
@@ -347,6 +367,7 @@ async def main():
     print(len(records))
     
     await preperate_data(records)
+    await writeSensorSegmentCSV(records)
     
     # ml_csv = data_import(path)
     # ml_csv.to_csv(save_path_gps)
