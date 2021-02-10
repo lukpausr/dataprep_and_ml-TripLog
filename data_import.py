@@ -5,7 +5,7 @@ import numpy as np
 import multiprocessing
 import asyncio
 
-import constants as C
+import triplog_constants as C
 
 pd.set_option('display.max_columns', None)  # or 1000
 pd.set_option('display.max_rows', None)  # or 1000
@@ -228,7 +228,7 @@ async def preperate_sensor(record):
         subsublabel = record.subsublabel     
         
         for i in range(0, len(df_res_acc)-pt_seg, int(pt_seg/2)):
-            
+                        
             path = str(time.time_ns())
             path = C.SENSOR_DATA_SEGMENT_FOLDER + path
             
@@ -238,11 +238,11 @@ async def preperate_sensor(record):
             
             df_toSave_lacc = pd.DataFrame()
             df_toSave_lacc = df_res_lacc[i:i+pt_seg]   
-            df_toSave_acc.to_pickle(path + "_lacc.pkl", protocol = 2)
+            df_toSave_lacc.to_pickle(path + "_lacc.pkl", protocol = 2)
             
             df_toSave_gyro = pd.DataFrame()
             df_toSave_gyro = df_res_gyro[i:i+pt_seg] 
-            df_toSave_acc.to_pickle(path + "_gyro.pkl", protocol = 2)
+            df_toSave_gyro.to_pickle(path + "_gyro.pkl", protocol = 2)
             
             obj = SensorDatapoint(
                 path + "_acc.pkl", 
@@ -252,6 +252,14 @@ async def preperate_sensor(record):
             )
                      
             record.splitted_sensor.append(obj)
+            
+            
+            # if(i == 0):
+            #     print(df_accData[1960:1980])
+            #     print(df_toSave_acc.head(5))
+            #     time.sleep(10000)
+            
+            
             
 async def totalSensorSegments(records):
     counter = 0
