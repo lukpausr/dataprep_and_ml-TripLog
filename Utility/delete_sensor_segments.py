@@ -6,7 +6,7 @@
 import sys, shutil, os
 sys.path.insert(0,'..')
 
-import constants as C
+import triplog_constants as C
 
 folder = C.SENSOR_DATA_SEGMENT_FOLDER
 
