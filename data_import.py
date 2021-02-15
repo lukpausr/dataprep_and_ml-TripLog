@@ -13,7 +13,7 @@ pd.set_option('display.max_colwidth', None)  # or 199
 
 
 class Record:
-    def __init__(self, path_gps, path_sensor, label = "", sublabel = "", subsublabel = ""):
+    def __init__(self, path_gps, path_sensor, label = "", sublabel = "", subsublabel = "", valid = True):
         self.path_gps = path_gps
         self.path_sensor = path_sensor
         self.label = label
@@ -21,15 +21,21 @@ class Record:
         self.subsublabel = subsublabel
         self.splitted_gps = []
         self.splitted_sensor = []
+        self.valid = valid
         
     def __str__(self):
-        print("### Record Object ###")
-        print("GPS-Path: ", self.path_gps)
-        print("Sensor-Path: ", self.sensor_gps)
-        print("Label: ", self.label)
-        print("Sublabel: ", self.sublabel)
-        print("SubSubLabel: ", self.subsublabel)
-        print("#####################")
+        
+        string = "### Record Object ###\n" + \
+                "GPS-Path: " + self.path_gps + "\n" + \
+                "Label: " + self.label + "\n" + \
+                "Sublabel: " + self.sublabel + "\n" + \
+                "SubSubLabel: " + self.subsublabel  + "\n" + \
+                "#####################"
+        
+        return string
+
+        
+        
         
 class SensorDatapoint:
     def __init__(self, acc_path, lacc_path, gyro_path, label, sublabel, subsublabel):
@@ -273,32 +279,67 @@ async def preperate_data(records):
         
     for record, i in zip(records, count):
         
-        if(True):
+        print(record.path_gps)
+        csv_raw = pd.read_csv(record.path_gps)
+        csv = csv_raw.iloc[1:]
+        csv.index = range(0, len(csv))
+      
+# print(csv.loc[1])       
+
+
+
+        timeStart = csv["Time_in_s"].loc[0] + C.SECONDS_CUT_START
+        timeStop = csv["Time_in_s"].loc[len(csv)-1] - C.SECONDS_CUT_END
+        csvStart = 0
+        csvStop = 0
+
+        if timeStop > timeStart:
+            for i in range(len(csv)):
+                if csv["Time_in_s"].loc[i] > timeStart and csvStart == 0:
+                    csvStart = i
+                if csv["Time_in_s"].loc[i] > timeStop and csvStop == 0:
+                    csvStop = i
+
+
+            csv = csv.iloc[csvStart:csvStop]
+            print(len(csv))
+                    
+
             
-            #print("File: ", record.path_sensor)
-            ### GPS Preperation ###
-            # preperate_gps(record)
+            print("Alles gut")
+        else:
+            record.valid = False
+            print("FAILURE: File is not long enough.")
+
+        print("Eingelesen.")
+
+        # if(True):
             
-            ### Sensor Preperation ###
-            #print(record.path_sensor)
+        #     print("File: ", record.path_sensor)
+        #     #GPS Preperation
+        #     preperate_gps(record)
+
+            
+        #     Sensor Preperation ###
+        #     print(record.path_sensor)
             
             
             
-            print("Dateipfad: ", record.path_sensor)
-            print("File ", i, " of ", len(records))
-            try:
-                size = os.path.getsize(record.path_sensor)
-                print('File size: ' + str(round(size / (1024 * 1024), 3)) + ' Megabytes')
-            except:
-                print("Datei nicht verfügbar!")
+    #         print("Dateipfad: ", record.path_sensor)
+    #         print("File ", i, " of ", len(records))
+    #         try:
+    #             size = os.path.getsize(record.path_sensor)
+    #             print('File size: ' + str(round(size / (1024 * 1024), 3)) + ' Megabytes')
+    #         except:
+    #             print("Datei nicht verfügbar!")
             
-            try:
-                await preperate_sensor(record)
-            except:
-                pass
+    #         try:
+    #             await preperate_sensor(record)
+    #         except:
+    #             pass
         
-    segment_count = await totalSensorSegments(records)
-    print("Total sensor segments: ", segment_count)
+    # segment_count = await totalSensorSegments(records)
+    # print("Total sensor segments: ", segment_count)
     
 async def writeSensorSegmentCSV(records):
     
@@ -375,7 +416,7 @@ async def main():
     print(len(records))
     
     await preperate_data(records)
-    await writeSensorSegmentCSV(records)
+    # await writeSensorSegmentCSV(records)
     
     # ml_csv = data_import(path)
     # ml_csv.to_csv(save_path_gps)
