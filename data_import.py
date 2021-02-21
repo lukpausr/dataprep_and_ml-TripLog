@@ -274,11 +274,12 @@ async def preperate_data(records):
         
     for record, i in zip(records, count):
         
-        print(record.path_gps)
+        
+        ### Prüfe ob GPS-Dateien genug Datenpunkte enthalten
+        # print(record.path_gps)
         csv_raw = pd.read_csv(record.path_gps)
         csv = csv_raw.iloc[1:]
         csv.index = range(0, len(csv))
-      
         # print(csv.loc[1])       
 
         timeStart = csv["Time_in_s"].loc[0] + C.SECONDS_CUT_START
@@ -294,16 +295,15 @@ async def preperate_data(records):
                     csvStop = i
 
             csv = csv.iloc[csvStart:csvStop]
-            print(len(csv))   
-            print("Alles gut")
+            # print(len(csv))   
+            print("SUCCESS")
             
         else:
             record.valid = False
             print("FAILURE: File is not long enough.")
 
-        print("Eingelesen.")
 
-        if(True):
+        if(record.valid):
             
             print("File: ", record.path_sensor)
             ### GPS Preperation ###
@@ -325,7 +325,8 @@ async def preperate_data(records):
                 await preperate_sensor(record)
             except:
                 pass
-        
+       
+    ### Statistik: Anzahl der eingelesenen Segmente ###    
     segment_count = await totalSensorSegments(records)
     print("Total sensor segments: ", segment_count)
     
