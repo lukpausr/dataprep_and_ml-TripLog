@@ -24,19 +24,14 @@ class Record:
         self.valid = valid
         
     def __str__(self):
-        
         string = "### Record Object ###\n" + \
                 "GPS-Path: " + self.path_gps + "\n" + \
                 "Label: " + self.label + "\n" + \
                 "Sublabel: " + self.sublabel + "\n" + \
                 "SubSubLabel: " + self.subsublabel  + "\n" + \
                 "#####################"
-        
         return string
-
-        
-        
-        
+ 
 class SensorDatapoint:
     def __init__(self, acc_path, lacc_path, gyro_path, label, sublabel, subsublabel):
         self.acc_path = acc_path
@@ -284,9 +279,7 @@ async def preperate_data(records):
         csv = csv_raw.iloc[1:]
         csv.index = range(0, len(csv))
       
-# print(csv.loc[1])       
-
-
+        # print(csv.loc[1])       
 
         timeStart = csv["Time_in_s"].loc[0] + C.SECONDS_CUT_START
         timeStop = csv["Time_in_s"].loc[len(csv)-1] - C.SECONDS_CUT_END
@@ -300,46 +293,41 @@ async def preperate_data(records):
                 if csv["Time_in_s"].loc[i] > timeStop and csvStop == 0:
                     csvStop = i
 
-
             csv = csv.iloc[csvStart:csvStop]
-            print(len(csv))
-                    
-
-            
+            print(len(csv))   
             print("Alles gut")
+            
         else:
             record.valid = False
             print("FAILURE: File is not long enough.")
 
         print("Eingelesen.")
 
-        # if(True):
+        if(True):
             
-        #     print("File: ", record.path_sensor)
-        #     #GPS Preperation
-        #     preperate_gps(record)
-
+            print("File: ", record.path_sensor)
+            ### GPS Preperation ###
+            # preperate_gps(record)
+    
+            ### Sensor Preperation ###
+            print(record.path_sensor)
+   
+            print("Dateipfad: ", record.path_sensor)
+            print("File ", i, " of ", len(records))
             
-        #     Sensor Preperation ###
-        #     print(record.path_sensor)
+            try:
+                size = os.path.getsize(record.path_sensor)
+                print('File size: ' + str(round(size / (1024 * 1024), 3)) + ' Megabytes')
+            except:
+                print("Datei nicht verfügbar!")
             
-            
-            
-    #         print("Dateipfad: ", record.path_sensor)
-    #         print("File ", i, " of ", len(records))
-    #         try:
-    #             size = os.path.getsize(record.path_sensor)
-    #             print('File size: ' + str(round(size / (1024 * 1024), 3)) + ' Megabytes')
-    #         except:
-    #             print("Datei nicht verfügbar!")
-            
-    #         try:
-    #             await preperate_sensor(record)
-    #         except:
-    #             pass
+            try:
+                await preperate_sensor(record)
+            except:
+                pass
         
-    # segment_count = await totalSensorSegments(records)
-    # print("Total sensor segments: ", segment_count)
+    segment_count = await totalSensorSegments(records)
+    print("Total sensor segments: ", segment_count)
     
 async def writeSensorSegmentCSV(records):
     
@@ -403,8 +391,7 @@ async def collect_files(path):
                     )
                 )
     
-    return records
-    
+    return records   
 
 # =============================================================================
 # Hauptprogramm
