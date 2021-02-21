@@ -12,6 +12,8 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 import tensorflow as tf
+import keras
+
 from sklearn.model_selection import train_test_split
 
 print('TensorFlow version: {}'.format(tf.__version__))
@@ -61,11 +63,29 @@ def sensorML(training_data, training_labels, test_data, test_labels, output_laye
         metrics=['accuracy']
     )
     
-    model.fit(training_data, training_labels, epochs=20)
+    model.fit(training_data, training_labels, epochs=50)
     
     test_loss, test_acc = model.evaluate(test_data,  test_labels, verbose=2)
     print('\nTest accuracy:', test_acc)
 
+def sensorLSTM(training_data, training_labels, test_data, test_labels, output_layer):
+    
+    model = keras.Sequential()
+    model.add(keras.layers.LSTM(units=256, input_shape=(C.SECONDS_SENSOR_SEGMENT*50, 3)))
+    model.add(keras.layers.Dropout(rate=0.5))
+    model.add(keras.layers.Dense(units=128, activation='relu'))
+    model.add(keras.layers.Dense(output_layer, activation='softmax'))
+    
+    model.compile(
+      loss='sparse_categorical_crossentropy',
+      optimizer='adam',
+      metrics=['accuracy']
+    )
+
+    model.fit(training_data, training_labels, epochs=50)
+
+    test_loss, test_acc = model.evaluate(test_data,  test_labels, verbose=2)
+    print('\nTest accuracy:', test_acc)
 
     
 if(__name__ == "__main__"):
@@ -88,7 +108,7 @@ if(__name__ == "__main__"):
     
     # Loading Pickle Files Test Data
     test_data, test_labels = loadTrainingData(test, "accFile")
-    print(training_data[0], training_labels[0])
+    print(test_data[0], test_labels[0])
     print('------------------------------------------------')
     
     
@@ -115,4 +135,12 @@ if(__name__ == "__main__"):
     print(training_labels_numeric.shape)
     
     # Train ML Modell
-    sensorML(training_data, training_labels_numeric, test_data, test_labels_numeric, output_layer)
+    # sensorML(training_data, training_labels_numeric, test_data, test_labels_numeric, output_layer)
+    
+    
+    # Reshape Input to 3D
+    train_X = training_data.reshape((training_data.shape[0], training_data.shape[1], 3))
+    test_X = test_data.reshape((test_data.shape[0], test_data.shape[1], 3))
+    print(train_X.shape, training_labels_numeric.shape, test_X.shape, test_labels_numeric.shape)
+    
+    sensorLSTM(train_X, training_labels_numeric, test_X, test_labels_numeric, output_layer)
