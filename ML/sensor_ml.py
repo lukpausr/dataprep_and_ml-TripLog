@@ -14,6 +14,8 @@ import matplotlib.pyplot as plt
 import tensorflow as tf
 import keras
 
+import visualisation_ml as vis
+
 from sklearn.model_selection import train_test_split
 
 print('TensorFlow version: {}'.format(tf.__version__))
@@ -114,9 +116,16 @@ if(__name__ == "__main__"):
     
     # Return Labels
     stringLabels = getAvailableFeatures(sensor_segments)
+    allLabels = loadTrainingData(sensor_segments, "accFile")
     
     # Get amount of individual labels
     output_layer = len(stringLabels)
+    
+    # Visualisation
+    vis.dataDistribution(stringLabels, allLabels)
+    
+    
+    
     
     
     # Convert Training Labels to numeric representation
@@ -139,8 +148,8 @@ if(__name__ == "__main__"):
     
     
     # Reshape Input to 3D
-    train_X = training_data.reshape((training_data.shape[0], training_data.shape[1], 3))
-    test_X = test_data.reshape((test_data.shape[0], test_data.shape[1], 3))
-    print(train_X.shape, training_labels_numeric.shape, test_X.shape, test_labels_numeric.shape)
+    # train_X = training_data.reshape((training_data.shape[0], training_data.shape[1], 3))
+    # test_X = test_data.reshape((test_data.shape[0], test_data.shape[1], 3))
+    # print(train_X.shape, training_labels_numeric.shape, test_X.shape, test_labels_numeric.shape)
     
-    sensorLSTM(train_X, training_labels_numeric, test_X, test_labels_numeric, output_layer)
+    # sensorLSTM(train_X, training_labels_numeric, test_X, test_labels_numeric, output_layer)
