@@ -127,19 +127,19 @@ def preperate_gps(record, csv):
 
     C.SECONDS_SENSOR_SEGMENT
 
-def interpolate_data(df):
-    # =========================================================================
-    # Resampling der Daten
-    # https://stackoverflow.com/questions/47148446/pandas-resample-interpolate-is-producing-nans?noredirect=1&lq=1
-    # =========================================================================
-    oidx = df.index
-    nidx = pd.date_range(oidx.min(), oidx.max(), freq = C.INTERPOLATE_FREQUENCY)
-    df_res = df.reindex(oidx.union(nidx)).interpolate('index').reindex(nidx)
-    return df_res
+# def interpolate_data(df):
+#     # =========================================================================
+#     # Resampling der Daten
+#     # https://stackoverflow.com/questions/47148446/pandas-resample-interpolate-is-producing-nans?noredirect=1&lq=1
+#     # =========================================================================
+#     oidx = df.index
+#     nidx = pd.date_range(oidx.min(), oidx.max(), freq = C.INTERPOLATE_FREQUENCY)
+#     df_res = df.reindex(oidx.union(nidx)).interpolate('index').reindex(nidx)
+#     return df_res
 
 async def reindex_and_interpolate(df):
     oidx = df.index
-    nidx = pd.date_range(oidx.min(), oidx.max(), freq='20ms')
+    nidx = pd.date_range(oidx.min(), oidx.max(), freq=C.INTERPOLATE_FREQUENCY)
     df_res = df.reindex(oidx.union(nidx)).interpolate('index').reindex(nidx)
     return df_res
 
