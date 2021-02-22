@@ -6,7 +6,7 @@ import multiprocessing
 import asyncio
 
 import triplog_constants as C
-import visualisation_ml as vis
+import ML.visualisation_ml as vis
 
 pd.set_option('display.max_columns', None)  # or 1000
 pd.set_option('display.max_rows', None)  # or 1000
@@ -117,20 +117,15 @@ def data_import(path):
     # return(records)
     # print(ml_csv) 
 
-def preperate_gps(record):
+def preperate_gps(record, csv):
+    
 # =============================================================================
 # Alles was mit GPS Dateien zu tun hat - schneiden der Dateien, Berechnen der
 # Features etc
 # =============================================================================
-    
     # DataFrame erstellen
-    try:
-        # print(path+files+"/"+data)
-        dataFrame = csv_import(record.path_gps)
-    except: 
-        print("INVALID DATA: ", record.path_gps)
-        dataFrame = pd.DataFrame(columns=["Average speed", "Maximum speed", "Average speed without waiting","Minimum acceleration", "Maximum acceleration", "Duration", "Distance"])
 
+    C.SECONDS_SENSOR_SEGMENT
 
 def interpolate_data(df):
     # =========================================================================
@@ -289,43 +284,44 @@ async def preperate_data(records):
         csvStop = 0
 
         if timeStop > timeStart:
-            for i in range(len(csv)):
-                if csv["Time_in_s"].loc[i] > timeStart and csvStart == 0:
+            for j in range(len(csv)):
+                if csv["Time_in_s"].loc[j] > timeStart and csvStart == 0:
                     csvStart = i
-                if csv["Time_in_s"].loc[i] > timeStop and csvStop == 0:
+                if csv["Time_in_s"].loc[j] > timeStop and csvStop == 0:
                     csvStop = i
 
             csv = csv.iloc[csvStart:csvStop]
-            # print(len(csv))   
-            print("SUCCESS")
+            print("SUCCESSFUL")
+            record.valid = True
             
         else:
             record.valid = False
             print("FAILURE: File is not long enough.")
 
-
         if(record.valid):
             
-            print("File: ", record.path_sensor)
+            # print("File: ", record.path_sensor)
             ### GPS Preperation ###
             # preperate_gps(record)
     
             ### Sensor Preperation ###
-            print(record.path_sensor)
+            # print(record.path_sensor)
    
-            print("Dateipfad: ", record.path_sensor)
-            print("File ", i, " of ", len(records))
+            # print("Dateipfad: ", record.path_sensor)
+            # print("File ", i, " of ", len(records))
             
-            try:
-                size = os.path.getsize(record.path_sensor)
-                print('File size: ' + str(round(size / (1024 * 1024), 3)) + ' Megabytes')
-            except:
-                print("Datei nicht verfügbar!")
+            # try:
+            #     size = os.path.getsize(record.path_sensor)
+            #     print('File size: ' + str(round(size / (1024 * 1024), 3)) + ' Megabytes')
+            # except:
+            #     print("Datei nicht verfügbar!")
             
-            try:
-                await preperate_sensor(record)
-            except:
-                pass
+            # try:
+            #     await preperate_sensor(record)
+            # except:
+            #     pass
+
+            preperate_gps(record, csv)
        
     ### Statistik: Anzahl der eingelesenen Segmente ###    
     segment_count = await totalSensorSegments(records)
