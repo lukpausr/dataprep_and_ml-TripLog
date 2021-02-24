@@ -11,6 +11,7 @@ import ML.visualisation_ml as vis
 pd.set_option('display.max_columns', None)  # or 1000
 pd.set_option('display.max_rows', None)  # or 1000
 pd.set_option('display.max_colwidth', None)  # or 199
+pd.options.mode.chained_assignment = None  # default='warn'
 
 
 class Record:
@@ -41,6 +42,22 @@ class SensorDatapoint:
         self.label = label
         self.sublabel = sublabel
         self.subsublabel = subsublabel
+        
+class GpsDatapoint:
+    def __init__(self, avgSpeed, maxSpeed, minAcc, maxAcc, tow, towAvgSpeed, label, sublabel, subsublabel):
+        self.avgSpeed = avgSpeed
+        self.maxSpeed = maxSpeed
+        self.minAcc = minAcc
+        self.maxAcc = maxAcc
+        self.tow = tow
+        self.towAvgSpeed = towAvgSpeed
+        self.label = label
+        self.sublabel = sublabel
+        self.subsublabel = subsublabel
+        
+    def __str__(self):
+        string = "Average Speed :" + str(self.avgSpped)
+        return string
 
 def csv_import(path):
     """
@@ -117,15 +134,67 @@ def data_import(path):
     # return(records)
     # print(ml_csv) 
 
-def preperate_gps(record, csv):
-    
+async def preperate_gps(record):   
 # =============================================================================
 # Alles was mit GPS Dateien zu tun hat - schneiden der Dateien, Berechnen der
 # Features etc
 # =============================================================================
     # DataFrame erstellen
+    if os.path.isfile(record.path_gps):
+        df = pd.read_csv(record.path_gps, sep = ",")
+        df = df[:-1]
+        
+        start_time = df['Time_in_s'].iloc[0]
+        df['Time_in_s'] = df['Time_in_s'] - start_time    
+            
+        df_gpsData = df[['Latitude', 'Longitude', 'Altitude']].copy()
+        df_gpsData.index = pd.to_datetime(df['Time_in_s'], unit = 's')
 
-    C.SECONDS_SENSOR_SEGMENT
+        import time        
+        start = time.time()
+        print("Start Interpolation")
+        
+        gps = asyncio.create_task(
+            reindex_and_interpolate(
+                df_gpsData, 
+                C.GPS_INTERPOLATE_FREQUENCY
+            )
+        )
+        df_res_gps = await gps
+        
+        end = time.time()
+        print("--> Finished: ", end - start)
+        
+        ptbc_s = C.SECONDS_CUT_START                # Points to be cut (start)
+        ptbc_e = C.SECONDS_CUT_END                  # Points to be cut (end)
+        pt_seg = C.SECONDS_SENSOR_SEGMENT           # Points per segment
+                                                    # 1 Point per second
+                                            
+        df_res_gps = df_res_gps[ptbc_s:len(df_res_gps)-ptbc_e] 
+        df_res_gps['Time_in_s'] = df_res_gps.index.astype(np.int64) // 10**9
+        
+        label = record.label
+        sublabel = record.sublabel
+        subsublabel = record.subsublabel     
+        
+        for i in range(0, len(df_res_gps)-pt_seg, int(pt_seg/2)):
+            
+            df_work_gps = pd.DataFrame()
+            df_work_gps = df_res_gps[i:i+pt_seg]
+            
+            data = calculate.ml_csv(df_work_gps)
+
+            obj = GpsDatapoint(
+                data['Average speed'].iloc[0],
+                data['Maximum speed'].iloc[0],
+                data['Minimum acceleration'].iloc[0],
+                data['Maximum acceleration'].iloc[0],
+                data['Time of waiting'].iloc[0],
+                data['Average speed without waiting'].iloc[0],
+                label, sublabel, subsublabel
+            )     
+            record.splitted_gps.append(obj)        
+    
 
 # def interpolate_data(df):
 #     # =========================================================================
@@ -137,9 +206,9 @@ def preperate_gps(record, csv):
 #     df_res = df.reindex(oidx.union(nidx)).interpolate('index').reindex(nidx)
 #     return df_res
 
-async def reindex_and_interpolate(df):
+async def reindex_and_interpolate(df, frequency=C.INTERPOLATE_FREQUENCY):
     oidx = df.index
-    nidx = pd.date_range(oidx.min(), oidx.max(), freq=C.INTERPOLATE_FREQUENCY)
+    nidx = pd.date_range(oidx.min(), oidx.max(), freq=frequency)
     df_res = df.reindex(oidx.union(nidx)).interpolate('index').reindex(nidx)
     return df_res
 
@@ -286,12 +355,12 @@ async def preperate_data(records):
         if timeStop > timeStart:
             for j in range(len(csv)):
                 if csv["Time_in_s"].loc[j] > timeStart and csvStart == 0:
-                    csvStart = i
+                    csvStart = j
                 if csv["Time_in_s"].loc[j] > timeStop and csvStop == 0:
-                    csvStop = i
+                    csvStop = j
 
             csv = csv.iloc[csvStart:csvStop]
-            print("SUCCESSFUL")
+            # print("SUCCESSFUL")
             record.valid = True
             
         else:
@@ -300,32 +369,82 @@ async def preperate_data(records):
 
         if(record.valid):
             
+            print("######################################")
+            print("File ", i, " of ", len(records))
             # print("File: ", record.path_sensor)
-            ### GPS Preperation ###
-            # preperate_gps(record)
+            ## GPS Preperation ###
+
+            try:
+                await preperate_gps(record)
+            except:
+                pass
     
-            ### Sensor Preperation ###
-            # print(record.path_sensor)
-   
+            ## Sensor Preperation ###
             # print("Dateipfad: ", record.path_sensor)
             # print("File ", i, " of ", len(records))
             
-            # try:
-            #     size = os.path.getsize(record.path_sensor)
-            #     print('File size: ' + str(round(size / (1024 * 1024), 3)) + ' Megabytes')
-            # except:
-            #     print("Datei nicht verfügbar!")
+            try:
+                size = os.path.getsize(record.path_sensor)
+                # print('File size: ' + str(round(size / (1024 * 1024), 3)) + ' Megabytes')
+            except:
+                print("Datei nicht verfügbar!")
             
-            # try:
-            #     await preperate_sensor(record)
-            # except:
-            #     pass
-
-            preperate_gps(record, csv)
+            try:
+                await preperate_sensor(record)
+            except:
+                pass
+            
        
     ### Statistik: Anzahl der eingelesenen Segmente ###    
     segment_count = await totalSensorSegments(records)
     print("Total sensor segments: ", segment_count)
+
+async def writeFusedSegmentCSV(records):
+    
+    counter = 0
+    df = pd.DataFrame(columns=['accFile', 'laccFile', 'gyroFile', 'avgSpeed', 'maxSpeed', 'minAcc', 'maxAcc', 'tow', 'towAvgSpeed', 'Label', 'Sublabel', 'Subsublabel'])
+    
+    for record in records:
+        for segment_gps, segment_sensor in zip(record.splitted_gps, record.splitted_sensor):
+            df.loc[counter] = [
+                segment_sensor.acc_path, 
+                segment_sensor.lacc_path, 
+                segment_sensor.gyro_path,             
+                segment_gps.avgSpeed, 
+                segment_gps.maxSpeed, 
+                segment_gps.minAcc,
+                segment_gps.maxAcc,
+                segment_gps.tow,
+                segment_gps.towAvgSpeed,
+                segment_gps.label, 
+                segment_gps.sublabel, 
+                segment_gps.subsublabel
+            ]
+            counter = counter + 1
+
+    df.to_csv(C.FUSED_DATA_CSV)
+    
+async def writeGpsSegmentCSV(records):
+    
+    counter = 0
+    df = pd.DataFrame(columns=['avgSpeed', 'maxSpeed', 'minAcc', 'maxAcc', 'tow', 'towAvgSpeed', 'Label', 'Sublabel', 'Subsublabel'])
+    
+    for record in records:
+        for segment in record.splitted_gps:
+            df.loc[counter] = [
+                segment.avgSpeed, 
+                segment.maxSpeed, 
+                segment.minAcc,
+                segment.maxAcc,
+                segment.tow,
+                segment.towAvgSpeed,
+                segment.label, 
+                segment.sublabel, 
+                segment.subsublabel
+            ]
+            counter = counter + 1
+    
+    df.to_csv(C.GPS_DATA_CSV)
     
 async def writeSensorSegmentCSV(records):
     
@@ -401,7 +520,9 @@ async def main():
     print(len(records))
     
     await preperate_data(records)
-    # await writeSensorSegmentCSV(records)
+    await writeSensorSegmentCSV(records)
+    await writeGpsSegmentCSV(records)
+    await writeFusedSegmentCSV(records)
     
     # ml_csv = data_import(path)
     # ml_csv.to_csv(save_path_gps)

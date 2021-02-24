@@ -77,7 +77,7 @@ def get_data(csv):
     lats = csv["Latitude"]
     lons = csv["Longitude"]
     
-    print(type(lats[0]))
+    # print(type(lats[0]))
     # Distanzen in Listen speichern
     distances_total = [0]
     distances_diff = [0]
