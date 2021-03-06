@@ -300,16 +300,18 @@ async def preperate_sensor(record):
             
             df_toSave_acc = pd.DataFrame()
             df_toSave_acc = df_res_acc[i:i+pt_seg]
-            df_toSave_acc.to_pickle(path + "_acc.pkl", protocol = 2)
             
             df_toSave_lacc = pd.DataFrame()
             df_toSave_lacc = df_res_lacc[i:i+pt_seg]   
-            df_toSave_lacc.to_pickle(path + "_lacc.pkl", protocol = 2)
-            
+                    
             df_toSave_gyro = pd.DataFrame()
             df_toSave_gyro = df_res_gyro[i:i+pt_seg] 
-            df_toSave_gyro.to_pickle(path + "_gyro.pkl", protocol = 2)
             
+            if(C.WRITE_SENSOR_DATA_TO_FILE):
+                df_toSave_acc.to_pickle(path + "_acc.pkl", protocol = 2)
+                df_toSave_lacc.to_pickle(path + "_lacc.pkl", protocol = 2)
+                df_toSave_gyro.to_pickle(path + "_gyro.pkl", protocol = 2) 
+                
             obj = SensorDatapoint(
                 path + "_acc.pkl", 
                 path + "_lacc.pkl", 
@@ -318,15 +320,7 @@ async def preperate_sensor(record):
             )
                      
             record.splitted_sensor.append(obj)
-            
-            
-            # if(i == 0):
-            #     print(df_accData[1960:1980])
-            #     print(df_toSave_acc.head(5))
-            #     time.sleep(10000)
-            
-            
-            
+                    
 async def totalSensorSegments(records):
     counter = 0
     for record in records:
