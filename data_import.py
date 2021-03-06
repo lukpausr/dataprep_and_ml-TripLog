@@ -7,6 +7,7 @@ import asyncio
 
 import triplog_constants as C
 import ML.visualisation_ml as vis
+import FeatureExtraction.calculate_sensor as calcSensor
 
 pd.set_option('display.max_columns', None)  # or 1000
 pd.set_option('display.max_rows', None)  # or 1000
@@ -311,6 +312,8 @@ async def preperate_sensor(record):
                 df_toSave_acc.to_pickle(path + "_acc.pkl", protocol = 2)
                 df_toSave_lacc.to_pickle(path + "_lacc.pkl", protocol = 2)
                 df_toSave_gyro.to_pickle(path + "_gyro.pkl", protocol = 2) 
+                
+            calcSensor.sensorFFT(calcSensor.vectorLength(df_toSave_acc, "ACC"), (label + "_" + sublabel))
                 
             obj = SensorDatapoint(
                 path + "_acc.pkl", 
