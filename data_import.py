@@ -36,11 +36,14 @@ class Record:
         return string
  
 class SensorDatapoint:
-    def __init__(self, acc_path, lacc_path, gyro_path, maxFreq, label, sublabel, subsublabel):
+    def __init__(self, acc_path, lacc_path, gyro_path, maxFreqACC, maxFreqGYRO, maxSingleFreqACC, maxSingleFreqGYRO, label, sublabel, subsublabel):
         self.acc_path = acc_path
         self.lacc_path = lacc_path
         self.gyro_path = gyro_path
-        self.maxFreq = maxFreq
+        self.maxFreqACC = maxFreqACC,
+        self.maxFreqGYRO = maxFreqGYRO,
+        self.maxSingleFreqACC = maxSingleFreqACC,
+        self.maxSingleFreqGYRO = maxSingleFreqGYRO,
         self.label = label
         self.sublabel = sublabel
         self.subsublabel = subsublabel
@@ -314,13 +317,35 @@ async def preperate_sensor(record):
                 df_toSave_lacc.to_pickle(path + "_lacc.pkl", protocol = 2)
                 df_toSave_gyro.to_pickle(path + "_gyro.pkl", protocol = 2) 
                 
-            maxFreq = calcSensor.sensorFFT(calcSensor.vectorLength(df_toSave_acc, "ACC"), (label + "_" + sublabel))
-                
+            maxFreqACC = calcSensor.sensorEuclideanFFT(
+                calcSensor.vectorLength(df_toSave_acc, "ACC"), 
+                (label + "_" + sublabel)
+            )
+            maxFreqGYRO = calcSensor.sensorEuclideanFFT(
+                calcSensor.vectorLength(df_toSave_gyro, "GYRO"), 
+                (label + "_" + sublabel)
+            )
+            maxSingleFreqACC = calcSensor.sensorAxsFFT(
+                df_toSave_acc['ACC_X'], 
+                df_toSave_acc['ACC_Y'], 
+                df_toSave_acc['ACC_Z'], 
+                (label + "_" + sublabel)
+            )
+            maxSingleFreqGYRO = calcSensor.sensorAxsFFT(
+                df_toSave_gyro['w_X'], 
+                df_toSave_gyro['w_Y'], 
+                df_toSave_gyro['w_Z'], 
+                (label + "_" + sublabel)
+            )
+            
             obj = SensorDatapoint(
                 path + "_acc.pkl", 
                 path + "_lacc.pkl", 
                 path + "_gyro.pkl", 
-                maxFreq,
+                maxFreqACC,
+                maxFreqGYRO,
+                maxSingleFreqACC,
+                maxSingleFreqGYRO,
                 label, sublabel, subsublabel
             )
                      
@@ -401,7 +426,10 @@ async def preperate_data(records):
 async def writeFusedSegmentCSV(records):
     
     counter = 0
-    df = pd.DataFrame(columns=['accFile', 'laccFile', 'gyroFile', 'avgSpeed', 'maxSpeed', 'minAcc', 'maxAcc', 'tow', 'towAvgSpeed', 'maxFreq', 'Label', 'Sublabel', 'Subsublabel'])
+    df = pd.DataFrame(columns=['accFile', 'laccFile', 'gyroFile', 'avgSpeed', 
+                               'maxSpeed', 'minAcc', 'maxAcc', 'tow', 'towAvgSpeed', 
+                               'maxFreqACC', 'maxFreqGYRO', 'maxSingleFreqACC', 'maxSingleFreqGYRO',
+                               'Label', 'Sublabel', 'Subsublabel'])
     
     for record in records:
         for segment_gps, segment_sensor in zip(record.splitted_gps, record.splitted_sensor):
@@ -415,7 +443,10 @@ async def writeFusedSegmentCSV(records):
                 segment_gps.maxAcc,
                 segment_gps.tow,
                 segment_gps.towAvgSpeed,
-                segment_sensor.maxFreq,
+                segment_sensor.maxFreqACC,
+                segment_sensor.maxFreqGYRO,
+                segment_sensor.maxSingleFreqACC,
+                segment_sensor.maxSingleFreqGYRO,
                 segment_gps.label, 
                 segment_gps.sublabel, 
                 segment_gps.subsublabel

@@ -10,7 +10,7 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 
-def sensorFFT(df, label):
+def sensorEuclideanFFT(df, label):
     # https://docs.scipy.org/doc/scipy/reference/generated/scipy.fft.fft.html
     # https://docs.scipy.org/doc/scipy/reference/tutorial/fft.html
     
@@ -53,10 +53,56 @@ def sensorFFT(df, label):
         plt.show()
     
     return max_freq
+
+def singleFFT(df):
+    mean = df.mean()
+    df = df - mean 
+    
+    N = C.SAMPLE_POINTS
+    T = 1.0 / C.DATA_FREQUENCY_HZ
+    
+    y = df.to_numpy() 
+    yf = fft(y, len(y), norm="ortho")
+    xf = fftfreq(len(y), T)  
+    
+    for freq, i in zip(xf, list(range(len(xf)))):
+        if np.abs(freq) < 0.5:
+            yf[i] = 0.0
+     
+    max_idx = np.argmax(yf)
+    max_freq = np.abs(xf[max_idx])
+    max_amp = np.abs(yf[max_idx])
+   
+    return max_freq, max_amp
+
+def sensorAxsFFT(dfx, dfy, dfz, label):
+    max_freq = []
+    max_amp = []
+    
+    f, a = singleFFT(dfx)
+    max_freq.append(f)
+    max_amp.append(a)
+    
+    f, a = singleFFT(dfy)
+    max_freq.append(f)
+    max_amp.append(a)
+    
+    f, a = singleFFT(dfz)
+    max_freq.append(f)
+    max_amp.append(a)
+                
+    max_idx = np.argmax(np.array(max_amp))
+    # print("MaxAMP: ", max_amp)
+    # print("MaxFreq: ", max_freq)
+    # print("RESULT_FREQ: ", max_freq[max_idx])
+    
+    return max_freq[max_idx]
     
 def vectorLength(df, sensorType):
     if sensorType == "LINEAR_ACC":
         df['SUM'] = np.sqrt((df['LINEAR_ACC_X'])**2 + (df['LINEAR_ACC_Y'])**2 + (df['LINEAR_ACC_Z'])**2)
     if sensorType == "ACC":
         df['SUM'] = np.sqrt((df['ACC_X'])**2 + (df['ACC_Y'])**2 + (df['ACC_Z'])**2)
+    if sensorType == "GYRO":
+        df['SUM'] = np.sqrt((df['w_X'])**2 + (df['w_Y'])**2 + (df['w_Z'])**2)
     return df['SUM']
