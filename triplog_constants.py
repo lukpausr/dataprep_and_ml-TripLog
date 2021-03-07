@@ -22,4 +22,11 @@ GPS_INTERPOLATE_FREQUENCY = '1s'
 # Fast Fourier Transformation
 # =============================================================================
 DATA_FREQUENCY_HZ = 50
+SHOW_FFT_PLOTS = False
 SAMPLE_POINTS = SECONDS_SENSOR_SEGMENT * DATA_FREQUENCY_HZ
+
+# =============================================================================
+# Fast Fourier Graphs Video Output
+# =============================================================================
+GRAPH_PICTURE_FOLDER = "C:/Users/Lukas/Desktop/Graphen"
+VIDEO_DESTINATION_FOLDER = "C:/Users/Lukas/Desktop/"
