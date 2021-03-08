@@ -17,7 +17,6 @@ FUSED_DATA_CSV = SENSOR_DATA_SEGMENT_FOLDER + "fusedSegments.csv"
 INTERPOLATE_FREQUENCY = '20ms'
 GPS_INTERPOLATE_FREQUENCY = '1s'
 
-
 # =============================================================================
 # Fast Fourier Transformation
 # =============================================================================
@@ -30,3 +29,23 @@ SAMPLE_POINTS = SECONDS_SENSOR_SEGMENT * DATA_FREQUENCY_HZ
 # =============================================================================
 GRAPH_PICTURE_FOLDER = "C:/Users/Lukas/Desktop/Graphen"
 VIDEO_DESTINATION_FOLDER = "C:/Users/Lukas/Desktop/"
+
+# =============================================================================
+# Hybrid Machine Learning
+# =============================================================================
+HYBRID_SELECTED_FEATURES = [
+                                'avgSpeed', 
+                                'maxSpeed', 
+                                'minAcc', 
+                                'maxAcc', 
+                                #'tow', 
+                                #'towAvgSpeed', 
+                                'maxFreqACC',
+                                'maxFreqGYRO',
+                                'maxSingleFreqACC',
+                                'maxSingleFreqGYRO',
+                            ]
+HYBRID_SELECTED_LABELS =    [
+                                'Label', 
+                                'Sublabel', 
+                            ]
