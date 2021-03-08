@@ -16,9 +16,10 @@ pd.options.mode.chained_assignment = None  # default='warn'
 
 
 class Record:
-    def __init__(self, path_gps, path_sensor, label = "", sublabel = "", subsublabel = "", valid = True):
+    def __init__(self, path_gps, path_sensor, folder, label = "", sublabel = "", subsublabel = "", valid = True):
         self.path_gps = path_gps
         self.path_sensor = path_sensor
+        self.folder = folder
         self.label = label
         self.sublabel = sublabel
         self.subsublabel = subsublabel
@@ -249,13 +250,7 @@ async def preperate_sensor(record):
         
         df_gyroData = df[['w_X', 'w_Y', 'w_Z']].copy()
         df_gyroData.index = pd.to_datetime(df['Time_in_ns.2'], unit = 'ns')
-        
-        #print("Kopieren erledigt")
-        # print(df.head(20))
-        # print(df_accData.head(20))
-        # print(df_laccData.head(20))
-        # print(df_gyroData.head(20))
-        
+                
         # =====================================================================
         # Resampling der Daten
         # https://stackoverflow.com/questions/47148446/pandas-resample-interpolate-is-producing-nans?noredirect=1&lq=1
@@ -293,7 +288,6 @@ async def preperate_sensor(record):
         # Überlappung von 50 Prozent als Pickle Files und Ablegen der
         # Dateipfade in CSV Datei
         # =====================================================================
-                
         label = record.label
         sublabel = record.sublabel
         subsublabel = record.subsublabel     
@@ -337,15 +331,15 @@ async def preperate_sensor(record):
                 df_toSave_gyro['w_Z'], 
                 (label + "_" + sublabel)
             )
-            
+                     
             obj = SensorDatapoint(
                 path + "_acc.pkl", 
                 path + "_lacc.pkl", 
                 path + "_gyro.pkl", 
-                maxFreqACC,
-                maxFreqGYRO,
-                maxSingleFreqACC,
-                maxSingleFreqGYRO,
+                maxFreqACC.astype(float),
+                maxFreqGYRO.astype(float),
+                maxSingleFreqACC.astype(float),
+                maxSingleFreqGYRO.astype(float),
                 label, sublabel, subsublabel
             )
                      
@@ -391,7 +385,7 @@ async def preperate_data(records):
             record.valid = False
             print("FAILURE: File is not long enough.")
 
-        if(record.valid):
+        if(record.valid) and i == 20:
             
             print("######################################")
             print("File ", i, " of ", len(records))
@@ -429,7 +423,7 @@ async def writeFusedSegmentCSV(records):
     df = pd.DataFrame(columns=['accFile', 'laccFile', 'gyroFile', 'avgSpeed', 
                                'maxSpeed', 'minAcc', 'maxAcc', 'tow', 'towAvgSpeed', 
                                'maxFreqACC', 'maxFreqGYRO', 'maxSingleFreqACC', 'maxSingleFreqGYRO',
-                               'Label', 'Sublabel', 'Subsublabel'])
+                               'folder', 'Label', 'Sublabel', 'Subsublabel'])
     
     for record in records:
         for segment_gps, segment_sensor in zip(record.splitted_gps, record.splitted_sensor):
@@ -443,10 +437,11 @@ async def writeFusedSegmentCSV(records):
                 segment_gps.maxAcc,
                 segment_gps.tow,
                 segment_gps.towAvgSpeed,
+                segment_sensor.maxFreqACC[0],
                 segment_sensor.maxFreqACC,
-                segment_sensor.maxFreqGYRO,
-                segment_sensor.maxSingleFreqACC,
-                segment_sensor.maxSingleFreqGYRO,
+                segment_sensor.maxSingleFreqACC[0],
+                segment_sensor.maxSingleFreqGYRO[0],
+                record.folder,
                 segment_gps.label, 
                 segment_gps.sublabel, 
                 segment_gps.subsublabel
@@ -458,7 +453,8 @@ async def writeFusedSegmentCSV(records):
 async def writeGpsSegmentCSV(records):
     
     counter = 0
-    df = pd.DataFrame(columns=['avgSpeed', 'maxSpeed', 'minAcc', 'maxAcc', 'tow', 'towAvgSpeed', 'Label', 'Sublabel', 'Subsublabel'])
+    df = pd.DataFrame(columns=['avgSpeed', 'maxSpeed', 'minAcc', 'maxAcc', 'tow', 'towAvgSpeed', 
+                               'folder', 'Label', 'Sublabel', 'Subsublabel'])
     
     for record in records:
         for segment in record.splitted_gps:
@@ -469,6 +465,7 @@ async def writeGpsSegmentCSV(records):
                 segment.maxAcc,
                 segment.tow,
                 segment.towAvgSpeed,
+                record.folder,
                 segment.label, 
                 segment.sublabel, 
                 segment.subsublabel
@@ -480,7 +477,8 @@ async def writeGpsSegmentCSV(records):
 async def writeSensorSegmentCSV(records):
     
     counter = 0
-    df = pd.DataFrame(columns=['accFile', 'laccFile', 'gyroFile', 'Label', 'Sublabel', 'Subsublabel'])
+    df = pd.DataFrame(columns=['accFile', 'laccFile', 'gyroFile', 
+                               'folder', 'Label', 'Sublabel', 'Subsublabel'])
     
     for record in records:
         for segment in record.splitted_sensor:
@@ -488,6 +486,7 @@ async def writeSensorSegmentCSV(records):
                 segment.acc_path, 
                 segment.lacc_path, 
                 segment.gyro_path, 
+                record.folder,
                 segment.label, 
                 segment.sublabel, 
                 segment.subsublabel
@@ -532,6 +531,7 @@ async def collect_files(path):
                     Record(
                         path_gps= path_gps, 
                         path_sensor= path_sensor, 
+                        folder= folder,
                         label= labels[0],
                         sublabel= labels[1],
                         subsublabel= labels[2]

@@ -52,7 +52,10 @@ def sensorEuclideanFFT(df, label):
         
         plt.show()
     
-    return max_freq
+    # Teilen durch Faktor 2, da Berechnung der Vektorlänge 
+    # Ausschläge nach oben spiegelt
+    # Risiko von Verfälschung!
+    return max_freq / 2
 
 def singleFFT(df):
     mean = df.mean()
