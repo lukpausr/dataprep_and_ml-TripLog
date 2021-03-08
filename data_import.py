@@ -438,7 +438,7 @@ async def writeFusedSegmentCSV(records):
                 segment_gps.tow,
                 segment_gps.towAvgSpeed,
                 segment_sensor.maxFreqACC[0],
-                segment_sensor.maxFreqACC,
+                segment_sensor.maxFreqGYRO[0],
                 segment_sensor.maxSingleFreqACC[0],
                 segment_sensor.maxSingleFreqGYRO[0],
                 record.folder,
