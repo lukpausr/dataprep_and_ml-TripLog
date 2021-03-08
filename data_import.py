@@ -385,7 +385,7 @@ async def preperate_data(records):
             record.valid = False
             print("FAILURE: File is not long enough.")
 
-        if(record.valid) and i == 20:
+        if(record.valid):
             
             print("######################################")
             print("File ", i, " of ", len(records))
