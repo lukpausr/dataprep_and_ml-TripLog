@@ -250,7 +250,7 @@ async def preperate_sensor(record):
         
         df_gyroData = df[['w_X', 'w_Y', 'w_Z']].copy()
         df_gyroData.index = pd.to_datetime(df['Time_in_ns.2'], unit = 'ns')
-                
+        
         # =====================================================================
         # Resampling der Daten
         # https://stackoverflow.com/questions/47148446/pandas-resample-interpolate-is-producing-nans?noredirect=1&lq=1
