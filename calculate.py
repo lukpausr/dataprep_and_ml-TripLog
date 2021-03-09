@@ -133,8 +133,14 @@ def calculate_data(times_total, times_diff, distances_total, distances_diff):
     try:
         avg_velocity_wo_waiting = sum(velocities_wo_waiting)/len(velocities_wo_waiting)
     except:
-        avg_velocity_wo_waiting = None
+        avg_velocity_wo_waiting = 0
 
+    if times_wo_waiting == []:
+        times_wo_waiting = [0] 
+    
+    if avg_velocity_wo_waiting == None: 
+        avg_velocity_wo_waiting = 0
+        
     #Wartezeiten
     waiting_duration = times_total[-1] - sum(times_wo_waiting)
 
