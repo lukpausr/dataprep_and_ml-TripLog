@@ -1,18 +1,32 @@
 import matplotlib.pyplot as plt
+import numpy as np
 
 def dataDistribution(stringLabel, allLabels):
-    x_pos = [i for i, _ in enumerate(stringLabel)]
+    counts = []
+    for i in range(len(stringLabel)):
+        counts.append(0)
     
-    y_pos = []
-    for i in len(stringLabel):
-        y_pos[i] = allLabels.count(stringLabel[i])
-    
-    plt.bar(x_pos, y_pos, color='green')
-    plt.xlabel("Verkehrsmittel")
-    plt.ylabel("Absolute Häufigkeit")
-    plt.title("Absolute Häufigkeit von Verkehrsmitteln im Datensatz")
-    plt.xticks(x_pos, stringLabel)
-    plt.show()
+    plt.bar(list(range(len(stringLabel))), counts)
+    plt.title("Verkehrsmittelverteilung", fontdict= {"fontsize": 20, "fontweight": "bold"})
+    plt.axis()
+    plt.xlabel("Verkehrsmittel", fontdict= {"fontsize": "x-large"})
+    plt.ylabel("Anzahl Datensätze", fontdict= {"fontsize": "x-large"})
+    xlocs, xlabels = plt.xticks()
+
+    newXticks = list(range(len(stringLabel)))
+    newXlabels = stringLabel
+    plt.xticks(newXticks, newXlabels)
+
+    ylocs, ylabels = plt.yticks()
+    newYticks = list(range(max(counts)+1))
+    newYlabels = list(range(max(counts)+1))
+    plt.yticks(newYticks, newYlabels)
+
+    plt.savefig(r"C:\Users\johan\Desktop\fig.png")
+
+for i in allStrings:
+    counts[i] = counts[i] + 1
+print(counts)
 
 if(__name__ == "__main__"):
     pass
