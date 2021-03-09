@@ -1,11 +1,20 @@
 import matplotlib.pyplot as plt
 import numpy as np
 
+import sys, shutil, os
+sys.path.insert(0,'..')
+import triplog_constants as C
+
 def dataDistribution(stringLabel, allLabels):
     counts = []
     for i in range(len(stringLabel)):
         counts.append(0)
+        
+    for i in allLabels:
+        counts[i] = counts[i] + 1
+    print(counts)
     
+    plt.subplot(figsize=(20,20))
     plt.bar(list(range(len(stringLabel))), counts)
     plt.title("Verkehrsmittelverteilung", fontdict= {"fontsize": 20, "fontweight": "bold"})
     plt.axis()
@@ -22,11 +31,9 @@ def dataDistribution(stringLabel, allLabels):
     newYlabels = list(range(max(counts)+1))
     plt.yticks(newYticks, newYlabels)
 
-    plt.savefig(r"C:\Users\johan\Desktop\fig.png")
+    plt.savefig(C.SENSOR_DATA_SEGMENT_FOLDER + "fig.png")
 
-for i in allStrings:
-    counts[i] = counts[i] + 1
-print(counts)
+
 
 if(__name__ == "__main__"):
     pass

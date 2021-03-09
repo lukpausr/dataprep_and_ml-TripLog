@@ -109,9 +109,10 @@ if(__name__ == "__main__"):
     # np.nan_to_num(X_test)
     # np.nan_to_num(Y_test)
     
+    vis.dataDistribution(stringLabels, Y_train)
     
     # Machine Learning
-    dt(X_train, Y_train, X_test, Y_test, stringLabels)
+    #dt(X_train, Y_train, X_test, Y_test, stringLabels)
     
     
     
