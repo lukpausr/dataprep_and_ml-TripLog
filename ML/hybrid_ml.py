@@ -31,14 +31,19 @@ print('------------------------------------------------')
 
 def getAvailableLabels(hydrid_segments): 
     labels = set()
-    labels.update(hydrid_segments['Label'] + "_" + hydrid_segments['Sublabel']
-                  )   
+    if(C.COMPRESS_LABELS):
+        labels.update(hydrid_segments['Label'])
+    else:
+        labels.update(hydrid_segments['Label'] + "_" + hydrid_segments['Sublabel'])  
     return list(labels)
 
 def convertLabeltoInt(labelList, stringLabels):
     # https://stackoverflow.com/questions/176918/finding-the-index-of-an-item-in-a-list
-    labelList = list(labelList['Label'] + "_" + labelList['Sublabel']
-                     )
+    if(C.COMPRESS_LABELS):
+        labelList = list(labelList['Label'])
+    else:
+        labelList = list(labelList['Label'] + "_" + labelList['Sublabel'])
+        
     for i in range(len(labelList)):
         index = stringLabels.index(labelList[i])
         labelList[i] = int(index)

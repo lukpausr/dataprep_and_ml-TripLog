@@ -34,6 +34,7 @@ VIDEO_DESTINATION_FOLDER = "C:/Users/Lukas/Desktop/"
 # Hybrid Machine Learning
 # =============================================================================
 NORMALIZE_ELSE_STANDARDIZE = False
+COMPRESS_LABELS = False
 HYBRID_SELECTED_FEATURES = [
                                 'avgSpeed', 
                                 'maxSpeed', 
