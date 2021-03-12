@@ -31,16 +31,34 @@ print('------------------------------------------------')
 
 def getAvailableLabels(hydrid_segments): 
     labels = set()
-    labels.update(hydrid_segments['Label'] + "_" + hydrid_segments['Sublabel'])   
+    labels.update(hydrid_segments['Label'] + "_" + hydrid_segments['Sublabel']
+                  )   
     return list(labels)
 
 def convertLabeltoInt(labelList, stringLabels):
     # https://stackoverflow.com/questions/176918/finding-the-index-of-an-item-in-a-list
-    labelList = list(labelList['Label'] + "_" + labelList['Sublabel'])
+    labelList = list(labelList['Label'] + "_" + labelList['Sublabel']
+                     )
     for i in range(len(labelList)):
         index = stringLabels.index(labelList[i])
         labelList[i] = int(index)
     return np.array(labelList)
+
+def countLabels(labelList, stringLabels):
+    number_of_elements = []
+    for i in range(len(stringLabels)):
+        number_of_elements.append(0)
+    for i in labelList:
+        number_of_elements[i] = number_of_elements[i] + 1
+    return number_of_elements;
+
+def removeUntilEqual(df, hybrid_segment_labels_numeric):
+    df['numeric'] = hybrid_segment_labels_numeric
+    count = df['numeric'].value_counts()
+    min_number_of_elements = count.min()    
+    # print("Number of Elements\n",count, "\nMin. Number: ",min_number_of_elements)        
+    df = df.groupby('numeric').apply(lambda s: s.sample(min_number_of_elements))
+    return df
 
 def dt(X_train, Y_train, X_test, Y_test, stringLabels):
     clf = tree.DecisionTreeClassifier()
@@ -82,22 +100,34 @@ def cleanData(df):
 if(__name__ == "__main__"):
     
     # Load CSV
-    hydrid_segments = pd.read_csv(C.FUSED_DATA_CSV)
+    hybrid_segments = pd.read_csv(C.FUSED_DATA_CSV)
     
     # Remove unusable Data
-    hydrid_segments = cleanData(hydrid_segments)
+    hybrid_segments = cleanData(hybrid_segments)
     
     # Shuffle CSV
-    hydrid_segments = hydrid_segments.sample(frac=1).reset_index(drop=True)
-    
-    # Split file into Train- and Test-Data
-    train, test = train_test_split(hydrid_segments, test_size=0.2)
-    print("Trainings- und Testdatenset:", len(train), len(test))
-    print('------------------------------------------------')
+    hybrid_segments = hybrid_segments.sample(frac=1).reset_index(drop=True)
     
     # Calculate numeric labels
-    stringLabels = getAvailableLabels(hydrid_segments)
+    stringLabels = getAvailableLabels(hybrid_segments)
     print("Available Labels:\n" + str(stringLabels))
+    print('------------------------------------------------')
+    
+    # Remove Segments until each Label-Type has the same number of elements
+    # Shuffle again because we just sorted the dataframe ._.
+    # Shuffleing beforehand is needed because we don't want the first e.g. 300
+    # Segments of the same trip
+    hybrid_segment_labels_numeric = convertLabeltoInt(
+        hybrid_segments[C.HYBRID_SELECTED_LABELS], 
+        stringLabels
+    )
+    number_of_elements = countLabels(hybrid_segment_labels_numeric, stringLabels)
+    hybrid_segments = removeUntilEqual(hybrid_segments, hybrid_segment_labels_numeric)
+    hybrid_segments = hybrid_segments.sample(frac=1).reset_index(drop=True)
+    
+    # Split file into Train- and Test-Data
+    train, test = train_test_split(hybrid_segments, test_size=0.2)
+    print("Trainings- und Testdatenset:", len(train), len(test))
     print('------------------------------------------------')
     
     # Load Training Data
