@@ -2,10 +2,16 @@
 # CONDA ENVIRONMENT
 # 
 # =============================================================================
-
+#print(__name__)
+#__file__ = r"C:\Studium\5.Semester\Studienarbeit\dataprep_TripLog\ML\hybrid_ml.py"
 import sys, shutil, os
 sys.path.insert(0,'..')
+
+# print(os.path.abspath("."))
+#import dataprep_triplog.triplog_constants as C
 import triplog_constants as C
+
+
 
 import pandas as pd
 import numpy as np
