@@ -60,6 +60,34 @@ def removeUntilEqual(df, hybrid_segment_labels_numeric):
     df = df.groupby('numeric').apply(lambda s: s.sample(min_number_of_elements))
     return df
 
+def cleanData(df):
+    print("Anzahl der Daten vor Data-Cleaning:", len(df))
+    df.drop(
+        df[df['tow'] > 0.5 * C.SECONDS_SENSOR_SEGMENT].index,
+        inplace=True
+    )
+    print("Anzahl der Daten nach Data-Cleaning:", len(df))
+    print('------------------------------------------------')
+    return df
+
+def standardize(df):
+    df[C.HYBRID_SELECTED_FEATURES] = (
+        (df[C.HYBRID_SELECTED_FEATURES] - 
+         df[C.HYBRID_SELECTED_FEATURES].mean()) /
+         df[C.HYBRID_SELECTED_FEATURES].std()
+    )
+    return df
+    
+def normalize(df):
+    df[C.HYBRID_SELECTED_FEATURES] = (
+        (df[C.HYBRID_SELECTED_FEATURES] -
+         df[C.HYBRID_SELECTED_FEATURES].min()) /
+        (df[C.HYBRID_SELECTED_FEATURES].max() -
+         df[C.HYBRID_SELECTED_FEATURES].min())
+    )
+    return df
+
+
 def dt(X_train, Y_train, X_test, Y_test, stringLabels):
     clf = tree.DecisionTreeClassifier()
     clf = clf.fit(X_train, Y_train)
@@ -86,15 +114,7 @@ def dt(X_train, Y_train, X_test, Y_test, stringLabels):
             disp.ax_.set_title(title)
             plt.show()
     
-def cleanData(df):
-    print("Anzahl der Daten vor Data-Cleaning:", len(df))
-    df.drop(
-        df[df['tow'] > 0.5 * C.SECONDS_SENSOR_SEGMENT].index,
-        inplace=True
-    )
-    print("Anzahl der Daten nach Data-Cleaning:", len(df))
-    print('------------------------------------------------')
-    return df
+
 
 
 if(__name__ == "__main__"):
@@ -124,6 +144,12 @@ if(__name__ == "__main__"):
     number_of_elements = countLabels(hybrid_segment_labels_numeric, stringLabels)
     hybrid_segments = removeUntilEqual(hybrid_segments, hybrid_segment_labels_numeric)
     hybrid_segments = hybrid_segments.sample(frac=1).reset_index(drop=True)
+    
+    if(C.NORMALIZE_ELSE_STANDARDIZE):
+        hybrid_segments = normalize(hybrid_segments)
+    else:
+        hybrid_segments = standardize(hybrid_segments)
+    
     
     # Split file into Train- and Test-Data
     train, test = train_test_split(hybrid_segments, test_size=0.2)
