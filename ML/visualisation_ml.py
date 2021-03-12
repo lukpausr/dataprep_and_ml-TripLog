@@ -14,7 +14,7 @@ def dataDistribution(stringLabel, allLabels):
         counts[i] = counts[i] + 1
     print(counts)
     
-    plt.subplot(figsize=(20,20))
+    plt.figure(figsize=(20,10))
     plt.bar(list(range(len(stringLabel))), counts)
     plt.title("Verkehrsmittelverteilung", fontdict= {"fontsize": 20, "fontweight": "bold"})
     plt.axis()
@@ -25,14 +25,9 @@ def dataDistribution(stringLabel, allLabels):
     newXticks = list(range(len(stringLabel)))
     newXlabels = stringLabel
     plt.xticks(newXticks, newXlabels)
-
-    ylocs, ylabels = plt.yticks()
-    newYticks = list(range(max(counts)+1))
-    newYlabels = list(range(max(counts)+1))
-    plt.yticks(newYticks, newYlabels)
-
-    plt.savefig(C.SENSOR_DATA_SEGMENT_FOLDER + "fig.png")
-
+    
+    #plt.savefig(C.SENSOR_DATA_SEGMENT_FOLDER + "fig.png")
+    plt.show()
 
 
 if(__name__ == "__main__"):

@@ -62,13 +62,24 @@ def dt(X_train, Y_train, X_test, Y_test, stringLabels):
             disp.ax_.set_title(title)
             plt.show()
     
-    
+def cleanData(df):
+    print("Anzahl der Daten vor Data-Cleaning:", len(df))
+    df.drop(
+        df[df['tow'] > 0.5 * C.SECONDS_SENSOR_SEGMENT].index,
+        inplace=True
+    )
+    print("Anzahl der Daten nach Data-Cleaning:", len(df))
+    print('------------------------------------------------')
+    return df
 
 
 if(__name__ == "__main__"):
     
     # Load CSV
     hydrid_segments = pd.read_csv(C.FUSED_DATA_CSV)
+    
+    # Remove unusable Data
+    hydrid_segments = cleanData(hydrid_segments)
     
     # Shuffle CSV
     hydrid_segments = hydrid_segments.sample(frac=1).reset_index(drop=True)
@@ -97,22 +108,13 @@ if(__name__ == "__main__"):
     print("Test Dataset Y:\n", Y_test.shape)
     print('------------------------------------------------')
     
-    # Überprüfen der Daten
-    # print(np.where(np.isnan(X_train)))
-    # print(np.where(np.isnan(Y_train)))
-    # print(np.where(np.isnan(X_test)))
-    # print(np.where(np.isnan(Y_test)))
-    
-    # Casten to Float
-    # np.nan_to_num(X_train)
-    # np.nan_to_num(Y_train)
-    # np.nan_to_num(X_test)
-    # np.nan_to_num(Y_test)
+
+
     
     vis.dataDistribution(stringLabels, Y_train)
     
     # Machine Learning
-    #dt(X_train, Y_train, X_test, Y_test, stringLabels)
+    dt(X_train, Y_train, X_test, Y_test, stringLabels)
     
     
     
