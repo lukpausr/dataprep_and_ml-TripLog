@@ -25,7 +25,9 @@ import visualisation_ml as vis
 from sklearn.model_selection import train_test_split
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.tree import DecisionTreeClassifier
-from sklearn import metrics
+from sklearn.neighbors import KNeighborsClassifier
+from sklearn.neural_network import MLPClassifier
+from sklearn.svm import SVC
 
 print('TensorFlow version: {}'.format(tf.__version__))
 print('------------------------------------------------')
@@ -93,6 +95,7 @@ def normalize(df):
     )
     return df
 
+# sckit-learn Algorithms
 def dt(X_train, Y_train, X_test, Y_test, stringLabels):
     clf = DecisionTreeClassifier()
     clf = clf.fit(X_train, Y_train)
@@ -105,68 +108,118 @@ def rf(X_train, Y_train, X_test, Y_test, stringLabels):
     
     vis.confusionMatrix(clf, X_test, Y_test, stringLabels)
 
+def svc(X_train, Y_train, X_test, Y_test, stringLabels):
+    clf = SVC()
+    clf = clf.fit(X_train, Y_train)
+    
+    vis.confusionMatrix(clf, X_test, Y_test, stringLabels)
+    
+def knn(X_train, Y_train, X_test, Y_test, stringLabels):
+    clf = KNeighborsClassifier(len(stringLabels))
+    clf = clf.fit(X_train, Y_train)
+    
+    vis.confusionMatrix(clf, X_test, Y_test, stringLabels)
+
+def nn(X_train, Y_train, X_test, Y_test, stringLabels):
+    clf = MLPClassifier(solver='lbfgs', alpha=1e-5, hidden_layer_sizes=(30, 2), random_state=1, max_iter=10000)
+    clf = clf.fit(X_train, Y_train)
+    
+    vis.confusionMatrix(clf, X_test, Y_test, stringLabels)
+
+def generateDatasets():
+    
+    for i in range(0, 4):
+    
+        # Load CSV
+        hybrid_segments = pd.read_csv(C.FUSED_DATA_CSV)
+        
+        # Remove unusable Data
+        hybrid_segments = cleanData(hybrid_segments)
+        
+        # Shuffle CSV
+        hybrid_segments = hybrid_segments.sample(frac=1).reset_index(drop=True)
+        
+        # Calculate numeric labels
+        stringLabels = getAvailableLabels(hybrid_segments)
+        print("Available Labels:\n" + str(stringLabels))
+        print('------------------------------------------------')
+        
+        # Remove Segments until each Label-Type has the same number of elements
+        # Shuffle again because we just sorted the dataframe ._.
+        # Shuffleing beforehand is needed because we don't want the first e.g. 300
+        # Segments of the same trip
+        hybrid_segment_labels_numeric = convertLabeltoInt(
+            hybrid_segments[C.HYBRID_SELECTED_LABELS], 
+            stringLabels
+        )
+        # number_of_elements = countLabels(hybrid_segment_labels_numeric, stringLabels)
+        hybrid_segments = removeUntilEqual(hybrid_segments, hybrid_segment_labels_numeric)
+        hybrid_segments = hybrid_segments.sample(frac=1).reset_index(drop=True)
+        
+        # Normalize or Standardize
+        if(C.NORMALIZE_ELSE_STANDARDIZE):
+            hybrid_segments = normalize(hybrid_segments)
+        else:
+            hybrid_segments = standardize(hybrid_segments)
+        
+        # Split file into Train- and Test-Data
+        train, test = train_test_split(hybrid_segments, test_size=0.2)
+        print("Trainings- und Testdatenset:", len(train), len(test))
+        print('------------------------------------------------')
+    
+        train.to_csv(C.DATASET_FOLDER + "train_" + str(i) + ".csv")
+        test.to_csv(C.DATASET_FOLDER + "test_" + str(i) + ".csv")
+
+def loadDataset(i):
+    train = pd.read_csv(C.DATASET_FOLDER + "train_" + str(i) + ".csv")
+    test = pd.read_csv(C.DATASET_FOLDER + "test_" + str(i) + ".csv")    
+    return train, test
+
 if(__name__ == "__main__"):
     
-    # Load CSV
-    hybrid_segments = pd.read_csv(C.FUSED_DATA_CSV)
-    
+    # Load CSV for String Labels
+    hybrid_segments = pd.read_csv(C.FUSED_DATA_CSV) 
     # Remove unusable Data
-    hybrid_segments = cleanData(hybrid_segments)
-    
+    hybrid_segments = cleanData(hybrid_segments)   
     # Shuffle CSV
-    hybrid_segments = hybrid_segments.sample(frac=1).reset_index(drop=True)
-    
+    hybrid_segments = hybrid_segments.sample(frac=1).reset_index(drop=True)    
     # Calculate numeric labels
     stringLabels = getAvailableLabels(hybrid_segments)
-    print("Available Labels:\n" + str(stringLabels))
-    print('------------------------------------------------')
-    
-    # Remove Segments until each Label-Type has the same number of elements
-    # Shuffle again because we just sorted the dataframe ._.
-    # Shuffleing beforehand is needed because we don't want the first e.g. 300
-    # Segments of the same trip
     hybrid_segment_labels_numeric = convertLabeltoInt(
         hybrid_segments[C.HYBRID_SELECTED_LABELS], 
         stringLabels
     )
-    number_of_elements = countLabels(hybrid_segment_labels_numeric, stringLabels)
-    hybrid_segments = removeUntilEqual(hybrid_segments, hybrid_segment_labels_numeric)
-    hybrid_segments = hybrid_segments.sample(frac=1).reset_index(drop=True)
     
-    # Normalize or Standardize
-    if(C.NORMALIZE_ELSE_STANDARDIZE):
-        hybrid_segments = normalize(hybrid_segments)
+    if(C.GENERATE_ELSE_LOAD_DATA):
+        generateDatasets()
     else:
-        hybrid_segments = standardize(hybrid_segments)
-    
-    
-    # Split file into Train- and Test-Data
-    train, test = train_test_split(hybrid_segments, test_size=0.2)
-    print("Trainings- und Testdatenset:", len(train), len(test))
-    print('------------------------------------------------')
-    
-    # Load Training Data
-    X_train = np.array(train[C.HYBRID_SELECTED_FEATURES])
-    Y_train = convertLabeltoInt(train[C.HYBRID_SELECTED_LABELS], stringLabels)
-    print("Training Dataset X:\n", X_train.shape)
-    print("Training Dataset Y:\n", Y_train.shape)
-    print('------------------------------------------------')
-    
-    # Load Test Data
-    X_test = np.array(test[C.HYBRID_SELECTED_FEATURES])
-    Y_test = convertLabeltoInt(test[C.HYBRID_SELECTED_LABELS], stringLabels)
-    print("Test Dataset X:\n", X_test.shape)
-    print("Test Dataset Y:\n", Y_test.shape)
-    print('------------------------------------------------')
-    
+        # Load Data
+        train, test = loadDataset(1)
+        
+        # Load Training Data
+        X_train = np.array(train[C.HYBRID_SELECTED_FEATURES])
+        Y_train = convertLabeltoInt(train[C.HYBRID_SELECTED_LABELS], stringLabels)
+        print("Training Dataset X:\n", X_train.shape)
+        print("Training Dataset Y:\n", Y_train.shape)
+        print('------------------------------------------------')
+        
+        # Load Test Data
+        X_test = np.array(test[C.HYBRID_SELECTED_FEATURES])
+        Y_test = convertLabeltoInt(test[C.HYBRID_SELECTED_LABELS], stringLabels)
+        print("Test Dataset X:\n", X_test.shape)
+        print("Test Dataset Y:\n", Y_test.shape)
+        print('------------------------------------------------')
+        
 
-
-    vis.dataDistribution(stringLabels, hybrid_segment_labels_numeric)
-    vis.dataDistribution(stringLabels, Y_train)
-    
-    # Machine Learning
-    dt(X_train, Y_train, X_test, Y_test, stringLabels)
-    rf(X_train, Y_train, X_test, Y_test, stringLabels)
+        vis.dataDistribution(stringLabels, hybrid_segment_labels_numeric)
+        vis.dataDistribution(stringLabels, Y_train)
+        
+        # Machine Learning
+        dt(X_train, Y_train, X_test, Y_test, stringLabels)
+        rf(X_train, Y_train, X_test, Y_test, stringLabels)
+        svc(X_train, Y_train, X_test, Y_test, stringLabels)
+        knn(X_train, Y_train, X_test, Y_test, stringLabels)
+        nn(X_train, Y_train, X_test, Y_test, stringLabels)
     
     
     

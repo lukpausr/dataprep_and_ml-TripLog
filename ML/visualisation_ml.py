@@ -43,8 +43,8 @@ def confusionMatrix(clf, X_test, Y_test, stringLabels):
     # metrics.plot_confusion_matrix(clf, X_test, Y_test)  
     # plt.show()  
     
-    titles_options = [("Confusion matrix, without normalization", None),
-                  ("Normalized confusion matrix", 'true')]
+    titles_options = [("Confusion matrix, without normalization: " + str(type(clf)), None),
+                  ("Normalized confusion matrix: " + str(type(clf)), 'true')]
     for title, normalize in titles_options:
             fig, ax = plt.subplots(figsize=(60, 15))
             disp = metrics.plot_confusion_matrix(clf, X_test, Y_test,

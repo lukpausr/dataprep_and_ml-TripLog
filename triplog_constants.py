@@ -35,13 +35,14 @@ VIDEO_DESTINATION_FOLDER = "C:/Users/Lukas/Desktop/"
 # =============================================================================
 NORMALIZE_ELSE_STANDARDIZE = False
 COMPRESS_LABELS = False
+GENERATE_ELSE_LOAD_DATA = False
 HYBRID_SELECTED_FEATURES = [
                                 'avgSpeed', 
                                 'maxSpeed', 
                                 'minAcc', 
                                 'maxAcc', 
-                                #'tow', 
-                                #'towAvgSpeed', 
+                                'tow', 
+                                'towAvgSpeed', 
                                 'maxFreqACC',
                                 'maxFreqGYRO',
                                 'maxSingleFreqACC',
@@ -51,3 +52,4 @@ HYBRID_SELECTED_LABELS =    [
                                 'Label', 
                                 'Sublabel', 
                             ]
+DATASET_FOLDER = SENSOR_DATA_SEGMENT_FOLDER + "dataset/"
