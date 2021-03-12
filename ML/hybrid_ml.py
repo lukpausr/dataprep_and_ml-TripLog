@@ -23,7 +23,8 @@ import keras
 import visualisation_ml as vis
 
 from sklearn.model_selection import train_test_split
-from sklearn import tree
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.tree import DecisionTreeClassifier
 from sklearn import metrics
 
 print('TensorFlow version: {}'.format(tf.__version__))
@@ -92,35 +93,17 @@ def normalize(df):
     )
     return df
 
-
 def dt(X_train, Y_train, X_test, Y_test, stringLabels):
-    clf = tree.DecisionTreeClassifier()
+    clf = DecisionTreeClassifier()
     clf = clf.fit(X_train, Y_train)
-
-    # plt.figure(figsize=(50,10))  # set plot size (denoted in inches)
-    # tree.plot_tree(clf, fontsize=10)
-    # plt.savefig("C:/Users/Lukas/Desktop/dt.png", dpi=400)
     
-    Y_prediction = clf.predict(X_test)
+    vis.confusionMatrix(clf, X_test, Y_test, stringLabels)
     
-    print("Accuracy:", metrics.accuracy_score(Y_test, Y_prediction))
+def rf(X_train, Y_train, X_test, Y_test, stringLabels):
+    clf = RandomForestClassifier()
+    clf = clf.fit(X_train, Y_train)
     
-    # metrics.plot_confusion_matrix(clf, X_test, Y_test)  
-    # plt.show()  
-    
-    titles_options = [("Confusion matrix, without normalization", None),
-                  ("Normalized confusion matrix", 'true')]
-    for title, normalize in titles_options:
-            fig, ax = plt.subplots(figsize=(60, 15))
-            disp = metrics.plot_confusion_matrix(clf, X_test, Y_test,
-                                         display_labels=stringLabels,
-                                         cmap=plt.cm.Blues,
-                                         normalize=normalize, ax=ax)
-            disp.ax_.set_title(title)
-            plt.show()
-    
-
-
+    vis.confusionMatrix(clf, X_test, Y_test, stringLabels)
 
 if(__name__ == "__main__"):
     
@@ -150,6 +133,7 @@ if(__name__ == "__main__"):
     hybrid_segments = removeUntilEqual(hybrid_segments, hybrid_segment_labels_numeric)
     hybrid_segments = hybrid_segments.sample(frac=1).reset_index(drop=True)
     
+    # Normalize or Standardize
     if(C.NORMALIZE_ELSE_STANDARDIZE):
         hybrid_segments = normalize(hybrid_segments)
     else:
@@ -177,11 +161,12 @@ if(__name__ == "__main__"):
     
 
 
-    
+    vis.dataDistribution(stringLabels, hybrid_segment_labels_numeric)
     vis.dataDistribution(stringLabels, Y_train)
     
     # Machine Learning
     dt(X_train, Y_train, X_test, Y_test, stringLabels)
+    rf(X_train, Y_train, X_test, Y_test, stringLabels)
     
     
     
