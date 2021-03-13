@@ -50,13 +50,19 @@ class SensorDatapoint:
         self.subsublabel = subsublabel
         
 class GpsDatapoint:
-    def __init__(self, avgSpeed, maxSpeed, minAcc, maxAcc, tow, towAvgSpeed, label, sublabel, subsublabel):
+    def __init__(self, avgSpeed, maxSpeed, minAcc, 
+                 maxAcc, tow, towAvgSpeed, stdSpeed, varSpeed, 
+                 stdAcc, varAcc, label, sublabel, subsublabel):
         self.avgSpeed = avgSpeed
         self.maxSpeed = maxSpeed
         self.minAcc = minAcc
         self.maxAcc = maxAcc
         self.tow = tow
         self.towAvgSpeed = towAvgSpeed
+        self.stdSpeed = stdSpeed
+        self.varSpeed = varSpeed
+        self.stdAcc = stdAcc
+        self.varAcc = varAcc
         self.label = label
         self.sublabel = sublabel
         self.subsublabel = subsublabel
@@ -197,6 +203,10 @@ async def preperate_gps(record):
                 data['Maximum acceleration'].iloc[0],
                 data['Time of waiting'].iloc[0],
                 data['Average speed without waiting'].iloc[0],
+                data['STDSPEED'].iloc[0],
+                data['VARSPEED'].iloc[0],
+                data['STDACC'].iloc[0],
+                data['VARACC'].iloc[0],
                 label, sublabel, subsublabel
             )     
             record.splitted_gps.append(obj)        
@@ -421,7 +431,8 @@ async def writeFusedSegmentCSV(records):
     
     counter = 0
     df = pd.DataFrame(columns=['accFile', 'laccFile', 'gyroFile', 'avgSpeed', 
-                               'maxSpeed', 'minAcc', 'maxAcc', 'tow', 'towAvgSpeed', 
+                               'maxSpeed', 'minAcc', 'maxAcc', 'tow', 'towAvgSpeed',
+                               'stdSpeed', 'varSpeed', 'stdAcc', 'varAcc',
                                'maxFreqACC', 'maxFreqGYRO', 'maxSingleFreqACC', 'maxSingleFreqGYRO',
                                'folder', 'Label', 'Sublabel', 'Subsublabel'])
     
@@ -437,6 +448,10 @@ async def writeFusedSegmentCSV(records):
                 segment_gps.maxAcc,
                 segment_gps.tow,
                 segment_gps.towAvgSpeed,
+                segment_gps.stdSpeed,
+                segment_gps.varSpeed,
+                segment_gps.stdAcc,
+                segment_gps.varAcc,
                 segment_sensor.maxFreqACC[0],
                 segment_sensor.maxFreqGYRO[0],
                 segment_sensor.maxSingleFreqACC[0],
@@ -454,6 +469,7 @@ async def writeGpsSegmentCSV(records):
     
     counter = 0
     df = pd.DataFrame(columns=['avgSpeed', 'maxSpeed', 'minAcc', 'maxAcc', 'tow', 'towAvgSpeed', 
+                               'stdSpeed', 'varSpeed', 'stdAcc', 'varAcc',
                                'folder', 'Label', 'Sublabel', 'Subsublabel'])
     
     for record in records:
@@ -465,6 +481,10 @@ async def writeGpsSegmentCSV(records):
                 segment.maxAcc,
                 segment.tow,
                 segment.towAvgSpeed,
+                segment.stdSpeed,
+                segment.varSpeed,
+                segment.stdAcc,
+                segment.varAcc,
                 record.folder,
                 segment.label, 
                 segment.sublabel, 

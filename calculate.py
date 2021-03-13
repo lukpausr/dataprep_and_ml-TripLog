@@ -1,4 +1,5 @@
 import pandas as pd
+import numpy as np
 from gpx_csv_converter import Converter
 from math import sin, cos, sqrt, atan2, radians
 
@@ -153,11 +154,34 @@ def calculate_data(times_total, times_diff, distances_total, distances_diff):
 
     #Entfernung
     distance = distances_total[-1]
-   
+    
+    #Standardabweichung und Varianz
+    stdSpeed = np.std(velocities, dtype=np.float64)
+    varSpeed = np.var(velocities, dtype=np.float64)
+    stdAcc = np.std(accelerations, dtype=np.float64)
+    varAcc = np.var(accelerations, dtype=np.float64)
+    
     #Daten zusammenfassen
     #dauer einer Beschleunigung, bremsweg
-    data = [avg_velocity, max_velocity, min_acceleration, max_acceleration, duration, distance, waiting_duration, avg_velocity_wo_waiting]
-    data = pd.DataFrame(data=[data], columns = ["Average speed", "Maximum speed","Minimum acceleration", "Maximum acceleration", "Duration", "Distance","Time of waiting", "Average speed without waiting"])
+    data = [avg_velocity, max_velocity, min_acceleration, max_acceleration, 
+            duration, distance, waiting_duration, avg_velocity_wo_waiting,
+            stdSpeed, varSpeed, stdAcc, varAcc]
+    data = pd.DataFrame(
+        data=[data], columns = [
+            "Average speed", 
+            "Maximum speed",
+            "Minimum acceleration", 
+            "Maximum acceleration", 
+            "Duration", 
+            "Distance",
+            "Time of waiting", 
+            "Average speed without waiting",
+            "STDSPEED",
+            "VARSPEED",
+            "STDACC",
+            "VARACC"
+        ]
+    )
     return(data)
 
 def ml_csv(csv):
