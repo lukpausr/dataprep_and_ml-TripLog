@@ -109,3 +109,17 @@ def vectorLength(df, sensorType):
     if sensorType == "GYRO":
         df['SUM'] = np.sqrt((df['w_X'])**2 + (df['w_Y'])**2 + (df['w_Z'])**2)
     return df['SUM']
+
+def metrics(df):
+    npArray = df.to_numpy()
+    std = np.std(npArray, dtype = np.float64)
+    var = np.var(npArray, dtype = np.float64)   
+    return std, var
+    
+
+
+
+
+
+
+

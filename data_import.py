@@ -37,7 +37,10 @@ class Record:
         return string
  
 class SensorDatapoint:
-    def __init__(self, acc_path, lacc_path, gyro_path, maxFreqACC, maxFreqGYRO, maxSingleFreqACC, maxSingleFreqGYRO, label, sublabel, subsublabel):
+    def __init__(self, acc_path, lacc_path, gyro_path, 
+                 maxFreqACC, maxFreqGYRO, maxSingleFreqACC, maxSingleFreqGYRO, 
+                 stdAcc, varAcc, stdGyro, varGyro,
+                 label, sublabel, subsublabel):
         self.acc_path = acc_path
         self.lacc_path = lacc_path
         self.gyro_path = gyro_path
@@ -45,6 +48,10 @@ class SensorDatapoint:
         self.maxFreqGYRO = maxFreqGYRO,
         self.maxSingleFreqACC = maxSingleFreqACC,
         self.maxSingleFreqGYRO = maxSingleFreqGYRO,
+        self.stdAcc = stdAcc,
+        self.varAcc = varAcc,
+        self.stdGyro = stdGyro,
+        self.varGyro = varGyro,
         self.label = label
         self.sublabel = sublabel
         self.subsublabel = subsublabel
@@ -341,6 +348,12 @@ async def preperate_sensor(record):
                 df_toSave_gyro['w_Z'], 
                 (label + "_" + sublabel)
             )
+            stdAcc, varAcc = calcSensor.metrics(
+                calcSensor.vectorLength(df_toSave_acc, "ACC")
+            )
+            stdGyro, varGyro = calcSensor.metrics(
+                calcSensor.vectorLength(df_toSave_gyro, "GYRO")
+            )
                      
             obj = SensorDatapoint(
                 path + "_acc.pkl", 
@@ -350,6 +363,10 @@ async def preperate_sensor(record):
                 maxFreqGYRO.astype(float),
                 maxSingleFreqACC.astype(float),
                 maxSingleFreqGYRO.astype(float),
+                stdAcc.astype(float),
+                varAcc.astype(float),
+                stdGyro.astype(float),
+                varGyro.astype(float),
                 label, sublabel, subsublabel
             )
                      
@@ -393,7 +410,7 @@ async def preperate_data(records):
             
         else:
             record.valid = False
-            print("FAILURE: File is not long enough.")
+            # print("FAILURE: File is not long enough.")
 
         if(record.valid):
             
@@ -434,6 +451,7 @@ async def writeFusedSegmentCSV(records):
                                'maxSpeed', 'minAcc', 'maxAcc', 'tow', 'towAvgSpeed',
                                'stdSpeed', 'varSpeed', 'stdAcc', 'varAcc',
                                'maxFreqACC', 'maxFreqGYRO', 'maxSingleFreqACC', 'maxSingleFreqGYRO',
+                               'sensor_stdAcc', 'sensor_varAcc', 'sensor_stdGyro', 'sensor_varGyro',
                                'folder', 'Label', 'Sublabel', 'Subsublabel'])
     
     for record in records:
@@ -456,6 +474,10 @@ async def writeFusedSegmentCSV(records):
                 segment_sensor.maxFreqGYRO[0],
                 segment_sensor.maxSingleFreqACC[0],
                 segment_sensor.maxSingleFreqGYRO[0],
+                segment_sensor.stdAcc[0],
+                segment_sensor.varAcc[0],
+                segment_sensor.stdGyro[0],
+                segment_sensor.varGyro[0],
                 record.folder,
                 segment_gps.label, 
                 segment_gps.sublabel, 
