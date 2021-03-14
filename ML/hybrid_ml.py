@@ -29,6 +29,8 @@ from sklearn.neighbors import KNeighborsClassifier
 from sklearn.neural_network import MLPClassifier
 from sklearn.svm import SVC
 
+from mlxtend.feature_selection import SequentialFeatureSelector as SFS
+
 print('TensorFlow version: {}'.format(tf.__version__))
 print('------------------------------------------------')
 
@@ -76,6 +78,13 @@ def cleanData(df):
     )
     print("Anzahl der Daten nach Data-Cleaning:", len(df))
     print('------------------------------------------------')
+    return df
+
+def removeBySublabel(df, labeltype):
+    df.drop(
+        df[df['Sublabel'] == labeltype].index,
+        inplace=True
+    )
     return df
 
 def standardize(df):
@@ -127,7 +136,6 @@ def nn(X_train, Y_train, X_test, Y_test, stringLabels):
     vis.confusionMatrix(clf, X_test, Y_test, stringLabels)
 
 def generateDatasets():
-    
     for i in range(0, 4):
     
         # Load CSV
@@ -135,6 +143,7 @@ def generateDatasets():
         
         # Remove unusable Data
         hybrid_segments = cleanData(hybrid_segments)
+        hybrid_segments = removeBySublabel(hybrid_segments, "Running")
         
         # Shuffle CSV
         hybrid_segments = hybrid_segments.sample(frac=1).reset_index(drop=True)
@@ -161,6 +170,8 @@ def generateDatasets():
             hybrid_segments = normalize(hybrid_segments)
         else:
             hybrid_segments = standardize(hybrid_segments)
+            
+        vis.dataDistribution(stringLabels, hybrid_segment_labels_numeric)
         
         # Split file into Train- and Test-Data
         train, test = train_test_split(hybrid_segments, test_size=0.2)
@@ -181,6 +192,7 @@ if(__name__ == "__main__"):
     hybrid_segments = pd.read_csv(C.FUSED_DATA_CSV) 
     # Remove unusable Data
     hybrid_segments = cleanData(hybrid_segments)   
+    hybrid_segments = removeBySublabel(hybrid_segments, "Running")
     # Shuffle CSV
     hybrid_segments = hybrid_segments.sample(frac=1).reset_index(drop=True)    
     # Calculate numeric labels
@@ -190,8 +202,13 @@ if(__name__ == "__main__"):
         stringLabels
     )
     
+    
+    
+    
     if(C.GENERATE_ELSE_LOAD_DATA):
         generateDatasets()
+        
+        
     else:
         # Load Data
         train, test = loadDataset(1)
@@ -215,12 +232,25 @@ if(__name__ == "__main__"):
         vis.dataDistribution(stringLabels, Y_train)
         
         # Machine Learning
-        dt(X_train, Y_train, X_test, Y_test, stringLabels)
-        rf(X_train, Y_train, X_test, Y_test, stringLabels)
-        svc(X_train, Y_train, X_test, Y_test, stringLabels)
-        knn(X_train, Y_train, X_test, Y_test, stringLabels)
-        nn(X_train, Y_train, X_test, Y_test, stringLabels)
-    
+        # dt(X_train, Y_train, X_test, Y_test, stringLabels)
+        # rf(X_train, Y_train, X_test, Y_test, stringLabels)
+        # svc(X_train, Y_train, X_test, Y_test, stringLabels)
+        # knn(X_train, Y_train, X_test, Y_test, stringLabels)
+        # nn(X_train, Y_train, X_test, Y_test, stringLabels)
+        
+        clf = RandomForestClassifier()
+        sfs1 = SFS(     
+            clf, 
+            k_features=8, 
+            forward=True, 
+            floating=False, 
+            verbose=2,
+            scoring='accuracy',
+            cv=5,
+            n_jobs=-1
+        )
+        sfs1 = sfs1.fit(X_train, Y_train, custom_feature_names=C.HYBRID_SELECTED_FEATURES)
+        vis.confusionMatrix(sfs1, X_test, Y_test, stringLabels)
     
     
     

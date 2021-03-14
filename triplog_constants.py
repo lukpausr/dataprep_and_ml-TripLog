@@ -4,7 +4,7 @@
 
 SECONDS_CUT_START = 60
 SECONDS_CUT_END = 60
-SECONDS_SENSOR_SEGMENT = 60
+SECONDS_SENSOR_SEGMENT = 30
 
 WRITE_SENSOR_DATA_TO_FILE = False
 
@@ -47,6 +47,14 @@ HYBRID_SELECTED_FEATURES = [
                                 'maxFreqGYRO',
                                 'maxSingleFreqACC',
                                 'maxSingleFreqGYRO',
+                                'stdSpeed', 
+                                'varSpeed', 
+                                'stdAcc', 
+                                'varAcc',
+                                'sensor_stdAcc', 
+                                'sensor_varAcc', 
+                                'sensor_stdGyro', 
+                                'sensor_varGyro'
                             ]
 HYBRID_SELECTED_LABELS =    [
                                 'Label', 
