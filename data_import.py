@@ -232,7 +232,8 @@ async def preperate_gps(record):
 async def reindex_and_interpolate(df, frequency=C.INTERPOLATE_FREQUENCY):
     oidx = df.index
     nidx = pd.date_range(oidx.min(), oidx.max(), freq=frequency)
-    df_res = df.reindex(oidx.union(nidx)).interpolate('index').reindex(nidx)
+    #df_res = df.reindex(oidx.union(nidx)).interpolate('index').reindex(nidx)
+    df_res = df.reindex(oidx.union(nidx)).interpolate(method='spline', order=5).reindex(nidx)
     return df_res
 
 async def preperate_sensor(record):
@@ -291,9 +292,10 @@ async def preperate_sensor(record):
         # =====================================================================
         # Abschneiden von Start und Ende der Daten      
         # =====================================================================
-        ptbc_s = C.SECONDS_CUT_START * 50           # Points to be cut (start)
-        ptbc_e = C.SECONDS_CUT_END * 50             # Points to be cut (end)
-        pt_seg = C.SECONDS_SENSOR_SEGMENT * 50      # Points per segment
+        ptps = C.SENSOR_INTERPOLATE_FREQUENCY_INT
+        ptbc_s = C.SECONDS_CUT_START * ptps         # Points to be cut (start)
+        ptbc_e = C.SECONDS_CUT_END * ptps           # Points to be cut (end)
+        pt_seg = C.SECONDS_SENSOR_SEGMENT * ptps    # Points per segment
                                                     # 50 Points per second
                                             
         df_res_acc = df_res_acc[ptbc_s:len(df_res_gyro)-ptbc_e]
@@ -381,42 +383,60 @@ async def totalSensorSegments(records):
 async def preperate_data(records):
         
     count = list(range(len(records)))
-        
+
+    print("Checking files for errors")
+
     for record, i in zip(records, count):
-        
-        
+     
+        print("######################################")
+        print("File ", i, " of ", len(records))   
+     
         ### Prüfe ob GPS-Dateien genug Datenpunkte enthalten
-        # print(record.path_gps)
         csv_raw = pd.read_csv(record.path_gps)
         csv = csv_raw.iloc[1:]
-        csv.index = range(0, len(csv))
-        # print(csv.loc[1])       
+        csv.index = range(0, len(csv))  
 
-        timeStart = csv["Time_in_s"].loc[0] + C.SECONDS_CUT_START
-        timeStop = csv["Time_in_s"].loc[len(csv)-1] - C.SECONDS_CUT_END
+        timeStartGPS = csv["Time_in_s"].loc[0] + C.SECONDS_CUT_START
+        timeStopGPS = csv["Time_in_s"].loc[len(csv)-1] - C.SECONDS_CUT_END
         csvStart = 0
         csvStop = 0
 
-        if timeStop > timeStart:
+        if timeStopGPS > timeStartGPS:
             for j in range(len(csv)):
-                if csv["Time_in_s"].loc[j] > timeStart and csvStart == 0:
+                if csv["Time_in_s"].loc[j] > timeStartGPS and csvStart == 0:
                     csvStart = j
-                if csv["Time_in_s"].loc[j] > timeStop and csvStop == 0:
+                if csv["Time_in_s"].loc[j] > timeStopGPS and csvStop == 0:
                     csvStop = j
 
             csv = csv.iloc[csvStart:csvStop]
-            # print("SUCCESSFUL")
             record.valid = True
-            
         else:
             record.valid = False
-            # print("FAILURE: File is not long enough.")
-
+            print("File invalid: ", record.path_gps)
+            
+        try:
+            csv_raw = pd.read_csv(record.path_sensor)
+            csv = csv_raw.iloc[1:]
+            maxTimeSensor = csv["Time_in_ns"].max()
+            minTimeSensor = csv["Time_in_ns"].min()
+            
+            if(maxTimeSensor - minTimeSensor < 4 * 60 * 60 * 1000 * 1000 * 1000):
+                record.valid = True
+            else:
+                record.valid = False
+                print("File invalid: ", record.path_sensor)
+        except:
+            record.valid = False
+            print("File not existing: ", record.path_sensor)   
+            
+    print("Done")
+    
+    for record, i in zip(records, count):
         if(record.valid):
             
             print("######################################")
             print("File ", i, " of ", len(records))
-            # print("File: ", record.path_sensor)
+            #print("File: ", record.path_sensor)
             ## GPS Preperation ###
 
             try:

@@ -14,14 +14,15 @@ GPS_DATA_CSV = SENSOR_DATA_SEGMENT_FOLDER + "gpsSegments.csv"
 FUSED_DATA_CSV = SENSOR_DATA_SEGMENT_FOLDER + "fusedSegments.csv"
 
 # INTERPOLATE_SIZE = 1000
-INTERPOLATE_FREQUENCY = '20ms'
-GPS_INTERPOLATE_FREQUENCY = '1s'
+INTERPOLATE_FREQUENCY = '20ms'              # [s]
+GPS_INTERPOLATE_FREQUENCY = '1s'            # [s]
+SENSOR_INTERPOLATE_FREQUENCY_INT = 50       # [Hz]
 
 # =============================================================================
 # Fast Fourier Transformation
 # =============================================================================
-DATA_FREQUENCY_HZ = 50
-SHOW_FFT_PLOTS = False
+SHOW_FFT_PLOTS = True
+DATA_FREQUENCY_HZ = SENSOR_INTERPOLATE_FREQUENCY_INT
 SAMPLE_POINTS = SECONDS_SENSOR_SEGMENT * DATA_FREQUENCY_HZ
 
 # =============================================================================
