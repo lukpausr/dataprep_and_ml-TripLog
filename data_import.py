@@ -171,7 +171,7 @@ async def preperate_gps(record):
 
         import time        
         start = time.time()
-        print("Start Interpolation")
+        print("\tStart Interpolation")
         
         gps = asyncio.create_task(
             reindex_and_interpolate(
@@ -182,19 +182,22 @@ async def preperate_gps(record):
         df_res_gps = await gps
         
         end = time.time()
-        print("--> Finished: ", end - start)
+        print("\t--> Finished: ", end - start)
+        
+        # print("\tSize: ", len(df_res_gps))
+        # print("\tdf_res_gps:  ", df_res_gps.index[0])
+        # print("\tdf_res_gps:  ", df_res_gps.index[-1])  
         
         ptbc_s = C.SECONDS_CUT_START                # Points to be cut (start)
         ptbc_e = C.SECONDS_CUT_END                  # Points to be cut (end)
-        pt_seg = C.SECONDS_SENSOR_SEGMENT           # Points per segment
-                                                    # 1 Point per second
-                                            
+        pt_seg = C.SECONDS_SENSOR_SEGMENT           # Points per segment                                                    # 1 Point per secon   
+                                  
         df_res_gps = df_res_gps[ptbc_s:len(df_res_gps)-ptbc_e] 
         df_res_gps['Time_in_s'] = df_res_gps.index.astype(np.int64) // 10**9
         
         label = record.label
         sublabel = record.sublabel
-        subsublabel = record.subsublabel     
+        subsublabel = record.subsublabel            
         
         for i in range(0, len(df_res_gps)-pt_seg, int(pt_seg/2)):
             
@@ -232,8 +235,8 @@ async def preperate_gps(record):
 async def reindex_and_interpolate(df, frequency=C.INTERPOLATE_FREQUENCY):
     oidx = df.index
     nidx = pd.date_range(oidx.min(), oidx.max(), freq=frequency)
-    #df_res = df.reindex(oidx.union(nidx)).interpolate('index').reindex(nidx)
-    df_res = df.reindex(oidx.union(nidx)).interpolate(method='spline', order=5).reindex(nidx)
+    df_res = df.reindex(oidx.union(nidx)).interpolate('index').reindex(nidx)
+    #df_res = df.reindex(oidx.union(nidx)).interpolate(method='spline', order=5).reindex(nidx)
     return df_res
 
 async def preperate_sensor(record):
@@ -276,7 +279,7 @@ async def preperate_sensor(record):
         import time        
         
         start = time.time()
-        print("Start Interpolation")
+        print("\tStart Interpolation")
         
         acc = asyncio.create_task(reindex_and_interpolate(df_accData))
         lacc = asyncio.create_task(reindex_and_interpolate(df_laccData))
@@ -287,7 +290,17 @@ async def preperate_sensor(record):
         df_res_gyro = await gyro
         
         end = time.time()
-        print("--> Finished: ", end - start)
+        print("\t--> Finished: ", end - start)
+        
+        # print("\tSize: ", len(df_res_acc))
+        # print("\tdf_accData:  ", df_accData.index[0])
+        # print("\tdf_accData:  ", df_accData.index[-1])
+        
+        # print("\tdf_laccData: ", df_laccData.index[0])
+        # print("\tdf_laccData: ", df_laccData.index[-1])
+        
+        # print("\tdf_gyroData: ", df_gyroData.index[0])
+        # print("\tdf_gyroData: ", df_gyroData.index[-1])
         
         # =====================================================================
         # Abschneiden von Start und Ende der Daten      
@@ -379,65 +392,126 @@ async def totalSensorSegments(records):
     for record in records:
         counter = counter + len(record.splitted_sensor)  
     return counter
-    
-async def preperate_data(records):
-        
+  
+async def validate_data(records):
+  
     count = list(range(len(records)))
 
     print("Checking files for errors")
-
     for record, i in zip(records, count):
+        
+        if True:
      
-        print("######################################")
-        print("File ", i, " of ", len(records))   
-     
-        ### Prüfe ob GPS-Dateien genug Datenpunkte enthalten
-        csv_raw = pd.read_csv(record.path_gps)
-        csv = csv_raw.iloc[1:]
-        csv.index = range(0, len(csv))  
-
-        timeStartGPS = csv["Time_in_s"].loc[0] + C.SECONDS_CUT_START
-        timeStopGPS = csv["Time_in_s"].loc[len(csv)-1] - C.SECONDS_CUT_END
-        csvStart = 0
-        csvStop = 0
-
-        if timeStopGPS > timeStartGPS:
-            for j in range(len(csv)):
-                if csv["Time_in_s"].loc[j] > timeStartGPS and csvStart == 0:
-                    csvStart = j
-                if csv["Time_in_s"].loc[j] > timeStopGPS and csvStop == 0:
-                    csvStop = j
-
-            csv = csv.iloc[csvStart:csvStop]
-            record.valid = True
-        else:
-            record.valid = False
-            print("File invalid: ", record.path_gps)
+            print("######################################")
+            print("File ", i, " of ", len(records))   
             
-        try:
-            csv_raw = pd.read_csv(record.path_sensor)
+            totalTimeGPS = 0
+            totalTimeSensor = 0
+         
+            ### Prüfe ob GPS-Dateien genug Datenpunkte enthalten
+            csv_raw = pd.read_csv(record.path_gps)
             csv = csv_raw.iloc[1:]
-            maxTimeSensor = csv["Time_in_ns"].max()
-            minTimeSensor = csv["Time_in_ns"].min()
+            csv.index = range(0, len(csv))  
+    
+            timeStartGPS = csv["Time_in_s"].loc[0] + C.SECONDS_CUT_START
+            timeStopGPS = csv["Time_in_s"].loc[len(csv)-1] - C.SECONDS_CUT_END
+            csvStart = 0
+            csvStop = 0
             
-            if(maxTimeSensor - minTimeSensor < 4 * 60 * 60 * 1000 * 1000 * 1000):
+            totalTimeGPS = csv["Time_in_s"].iloc[-1] - csv["Time_in_s"].iloc[0] 
+    
+            if timeStopGPS > timeStartGPS:
+                for j in range(len(csv)):
+                    if csv["Time_in_s"].loc[j] > timeStartGPS and csvStart == 0:
+                        csvStart = j
+                    if csv["Time_in_s"].loc[j] > timeStopGPS and csvStop == 0:
+                        csvStop = j
+    
+                csv = csv.iloc[csvStart:csvStop]
                 record.valid = True
             else:
                 record.valid = False
-                print("File invalid: ", record.path_sensor)
-        except:
-            record.valid = False
-            print("File not existing: ", record.path_sensor)   
-            
+                print("File invalid: ", record.path_gps)
+                
+            try:
+                csv_raw = pd.read_csv(record.path_sensor)
+                csv = csv_raw.iloc[1:]
+                maxTimeSensor = csv["Time_in_ns"].max()
+                minTimeSensor = csv["Time_in_ns"].min()
+                
+                totalTimeSensor = (csv["Time_in_ns"].iloc[-2] - csv["Time_in_ns"].iloc[0]) / (1000 * 1000 * 1000)
+                
+                if(maxTimeSensor - minTimeSensor < 4 * 60 * 60 * 1000 * 1000 * 1000):
+                    record.valid = True
+                else:
+                    record.valid = False
+                    print("File invalid: ", record.path_sensor)            
+                
+                if abs(totalTimeGPS - totalTimeSensor) > 60:
+                    record.valid = False
+                    print("GPS TIME: ", totalTimeGPS)
+                    print("SENSOR TIME: ", totalTimeSensor)
+                    print("Files do not fit ", record.path_sensor, record.path_gps)
+                    if(totalTimeGPS < totalTimeSensor):
+                        lb = get_sensor_seperation_index(csv)
+                        #print("LB: ", lb)
+                        csv = csv[lb:] 
+                        try:
+                            os.remove(record.path_sensor)
+                        except:
+                            pass
+                        csv.to_csv(record.path_sensor)
+                        totalTimeSensor = (csv["Time_in_ns"].iloc[-2] - csv["Time_in_ns"].iloc[0]) / (1000 * 1000 * 1000)
+                        if abs(totalTimeGPS - totalTimeSensor) < 60:
+                            print("Error fixed!")
+                            record.valid = True    
+       
+            except:
+                record.valid = False
+                print("File not existing: ", record.path_sensor)   
+        
+    await delete_invalid_Entries(records)       
     print("Done")
+
+def get_sensor_seperation_index(df):
+    df['diff'] = df["Time_in_ns"].diff()
+
+    print("MEAN: ", df["diff"].mean())
+    print("MIN: ", df["diff"].min())
+    print("MAX: ", df["diff"].max())
+    print(df["diff"].idxmax())
+    
+    return df["diff"].idxmax()
+
+async def delete_invalid_Entries(records):
+    for record in records:
+        if record.valid is False:
+            try: 
+                os.remove(record.path_gps)
+            except:
+                pass
+            try:
+                os.remove(record.path_sensor)
+            except:
+                pass
+            try:
+                records.remove(record)
+            except:
+                pass
+  
+async def preperate_data(records):
+        
+    if(C.VALIDATE is True):
+        await validate_data(records)
+        
+    count = list(range(len(records)))
     
     for record, i in zip(records, count):
         if(record.valid):
             
             print("######################################")
             print("File ", i, " of ", len(records))
-            #print("File: ", record.path_sensor)
-            ## GPS Preperation ###
+            print("\tFile: ", record.path_gps)
 
             try:
                 await preperate_gps(record)
@@ -445,19 +519,18 @@ async def preperate_data(records):
                 pass
     
             ## Sensor Preperation ###
-            # print("Dateipfad: ", record.path_sensor)
-            # print("File ", i, " of ", len(records))
+            print("\tFile: ", record.path_sensor)
             
             try:
                 size = os.path.getsize(record.path_sensor)
-                # print('File size: ' + str(round(size / (1024 * 1024), 3)) + ' Megabytes')
+                print('\tFile size: ' + str(round(size / (1024 * 1024), 3)) + ' Megabytes')
             except:
-                print("Datei nicht verfügbar!")
+                print("\tDatei nicht verfügbar!")
             
             try:
                 await preperate_sensor(record)
             except:
-                print("Unerwarteter Fehler: Preperate Sensor")
+                print("\tUnerwarteter Fehler: Preperate Sensor")
             
        
     ### Statistik: Anzahl der eingelesenen Segmente ###    
@@ -624,8 +697,7 @@ save_path_gps = "Z:/2020-JG18-T31Bewegungsanalyse-Pelz-Kroener/06-Datenaufbereit
 
 if(__name__ == "__main__"):
     import nest_asyncio
-    nest_asyncio.apply()
-    
+    nest_asyncio.apply()  
     asyncio.run(main())
     
     
