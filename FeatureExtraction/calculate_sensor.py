@@ -34,12 +34,14 @@ def sensorEuclideanFFT(df, label):
     max_amp = np.abs(yf[max_idx])
     
     if(C.SHOW_FFT_PLOTS):
+        plt.rcParams.update({'font.size': 12})   
+        
         fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(30, 10))
         #plt.semilogy(xf[1:N//2], 2.0/N * np.abs(yf[1:N//2]), '-b')
         ax1.plot(np.abs(xf), np.abs(yf))
         #n, bins, patches = ax.hist(yf[50:], 64, density=True)
         #ax.set_ylim(0, 50)
-        ax1.set_title(label + ", Max Amplitude at " + str(max_freq) + " Hz (Corrected " + str(max_freq/2) + " Hz)")
+        ax1.set_title(label + ", max. Amplitude at " + str(max_freq) + " Hz (Corrected " + str(max_freq/2) + " Hz)")
         ax1.set_xlabel("Frequency [HZ]")
         ax1.set_ylabel("Amplitude")
         
