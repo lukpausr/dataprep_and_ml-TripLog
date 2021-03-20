@@ -1,6 +1,8 @@
 # =============================================================================
 # KONSTANTEN
 # =============================================================================
+VALIDATE = False
+
 
 SECONDS_CUT_START = 60
 SECONDS_CUT_END = 60
@@ -21,7 +23,7 @@ SENSOR_INTERPOLATE_FREQUENCY_INT = 50       # [Hz]
 # =============================================================================
 # Fast Fourier Transformation
 # =============================================================================
-SHOW_FFT_PLOTS = True
+SHOW_FFT_PLOTS = False
 DATA_FREQUENCY_HZ = SENSOR_INTERPOLATE_FREQUENCY_INT
 SAMPLE_POINTS = SECONDS_SENSOR_SEGMENT * DATA_FREQUENCY_HZ
 
@@ -34,9 +36,9 @@ VIDEO_DESTINATION_FOLDER = "C:/Users/Lukas/Desktop/"
 # =============================================================================
 # Hybrid Machine Learning
 # =============================================================================
-NORMALIZE_ELSE_STANDARDIZE = False
+NORMALIZE_ELSE_STANDARDIZE = True
 COMPRESS_LABELS = False
-GENERATE_ELSE_LOAD_DATA = False
+GENERATE_ELSE_LOAD_DATA = True
 HYBRID_SELECTED_FEATURES = [
                                 'avgSpeed', 
                                 'maxSpeed', 
@@ -62,3 +64,13 @@ HYBRID_SELECTED_LABELS =    [
                                 'Sublabel', 
                             ]
 DATASET_FOLDER = SENSOR_DATA_SEGMENT_FOLDER + "dataset/"
+
+# =============================================================================
+# Start Program
+# =============================================================================
+
+
+
+
+
+
