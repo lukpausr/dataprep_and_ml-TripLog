@@ -161,7 +161,7 @@ async def preperate_gps(record):
     # DataFrame erstellen
     if os.path.isfile(record.path_gps):
         df = pd.read_csv(record.path_gps, sep = ",")
-        df = df[:-1]
+        df = df[1:-1]
         
         start_time = df['Time_in_s'].iloc[0]
         df['Time_in_s'] = df['Time_in_s'] - start_time    
@@ -468,7 +468,7 @@ async def validate_data(records):
        
             except:
                 record.valid = False
-                print("File not existing: ", record.path_sensor)   
+                print("File not existing: ", record.path_sensor)
         
     await delete_invalid_Entries(records)       
     print("Done")
@@ -507,7 +507,7 @@ async def preperate_data(records):
     count = list(range(len(records)))
     
     for record, i in zip(records, count):
-        if(record.valid):
+        if(record.valid) and "Walking" in record.sublabel:
             
             print("######################################")
             print("File ", i, " of ", len(records))

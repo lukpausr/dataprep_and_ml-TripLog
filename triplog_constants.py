@@ -1,7 +1,7 @@
 # =============================================================================
 # KONSTANTEN
 # =============================================================================
-VALIDATE = True
+VALIDATE = False
 
 
 SECONDS_CUT_START = 60
@@ -23,7 +23,7 @@ SENSOR_INTERPOLATE_FREQUENCY_INT = 50       # [Hz]
 # =============================================================================
 # Fast Fourier Transformation
 # =============================================================================
-SHOW_FFT_PLOTS = False
+SHOW_FFT_PLOTS = True
 DATA_FREQUENCY_HZ = SENSOR_INTERPOLATE_FREQUENCY_INT
 SAMPLE_POINTS = SECONDS_SENSOR_SEGMENT * DATA_FREQUENCY_HZ
 

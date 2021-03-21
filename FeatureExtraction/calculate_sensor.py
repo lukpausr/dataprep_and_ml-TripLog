@@ -34,9 +34,9 @@ def sensorEuclideanFFT(df, label):
     max_amp = np.abs(yf[max_idx])
     
     if(C.SHOW_FFT_PLOTS):
-        plt.rcParams.update({'font.size': 12})   
+        plt.rcParams.update({'font.size': 16})   
         
-        fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(30, 10))
+        fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(25, 10))
         #plt.semilogy(xf[1:N//2], 2.0/N * np.abs(yf[1:N//2]), '-b')
         ax1.plot(np.abs(xf), np.abs(yf))
         #n, bins, patches = ax.hist(yf[50:], 64, density=True)
