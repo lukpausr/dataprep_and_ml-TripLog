@@ -6,6 +6,52 @@ import sys, shutil, os
 sys.path.insert(0,'..')
 import triplog_constants as C
 
+def boxplotByFeature(df, stringLabels, features=C.HYBRID_SELECTED_FEATURES):
+
+
+    for feature in features:
+        df_label = []
+        df_features = []
+        for i in range(0, len(stringLabels)):
+            df_label.append(df.loc[df["numeric"] == i])
+            df_features.append(df_label[i][feature])
+        
+        fig = plt.figure(figsize =(10, 10)) 
+  
+        # Creating axes instance 
+        ax = fig.add_axes([0, 0, 1, 1]) 
+        # Creating plot 
+        bp = ax.boxplot(df_features)  
+        # show plot 
+        print(range(1, len(stringLabels)+1))
+        
+        plt.xticks(range(1, len(stringLabels)+1), stringLabels)
+        plt.title(feature)
+        plt.show() 
+
+
+
+      
+    # df0 = df.loc[df["numeric"] == 0]
+    # data_1 = df0[features[0]]
+    # data_2 = np.random.normal(90, 20, 200) 
+    # data_3 = np.random.normal(80, 30, 200) 
+    # data_4 = np.random.normal(70, 40, 200) 
+    # data = [data_1, data_2, data_3, data_4] 
+      
+    # fig = plt.figure(figsize =(10, 7)) 
+      
+    # # Creating axes instance 
+    # ax = fig.add_axes([0, 0, 1, 1]) 
+      
+    # # Creating plot 
+    # bp = ax.boxplot(data) 
+      
+    # # show plot 
+    # plt.show() 
+
+
+
 def dataDistribution(stringLabel, allLabels):
     counts = []
     for i in range(len(stringLabel)):
