@@ -37,7 +37,7 @@ def confusionMatrix(clf, X_test, Y_test, stringLabels):
     Y_prediction = clf.predict(X_test)
     
     print("Classifier: ",type(clf))
-    print("Accuracy:", metrics.accuracy_score(Y_test, Y_prediction))
+    print("Accuracy on Test-Dataset:", metrics.accuracy_score(Y_test, Y_prediction))
     print('------------------------------------------------')
     
     # metrics.plot_confusion_matrix(clf, X_test, Y_test)  

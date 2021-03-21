@@ -1,7 +1,7 @@
 # =============================================================================
 # KONSTANTEN
 # =============================================================================
-VALIDATE = False
+VALIDATE = True
 
 
 SECONDS_CUT_START = 60
@@ -36,9 +36,9 @@ VIDEO_DESTINATION_FOLDER = "C:/Users/Lukas/Desktop/"
 # =============================================================================
 # Hybrid Machine Learning
 # =============================================================================
-NORMALIZE_ELSE_STANDARDIZE = True
-COMPRESS_LABELS = False
-GENERATE_ELSE_LOAD_DATA = True
+NORMALIZE_ELSE_STANDARDIZE = False
+COMPRESS_LABELS = True
+GENERATE_ELSE_LOAD_DATA = False
 HYBRID_SELECTED_FEATURES = [
                                 'avgSpeed', 
                                 'maxSpeed', 

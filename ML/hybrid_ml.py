@@ -70,6 +70,25 @@ def removeUntilEqual(df, hybrid_segment_labels_numeric):
     df = df.groupby('numeric').apply(lambda s: s.sample(min_number_of_elements))
     return df
 
+def custom_train_test_split(df, hybrid_segment_labels_numeric):
+    occurances = df['Sublabel'].value_counts()
+    
+    df['numeric'] = hybrid_segment_labels_numeric
+    
+    train = df
+    test = pd.DataFrame()
+    
+    test_occurances = int(0.5 * min(occurances))
+    print(test_occurances)
+    
+    test = df.groupby('numeric').apply(lambda s: s.sample(test_occurances))
+    train[~train.index.isin(test.index)]
+    
+    print(test['Sublabel'].value_counts())
+    print(train['Sublabel'].value_counts())
+    
+    return train, test
+
 def cleanData(df):
     print("Anzahl der Daten vor Data-Cleaning:", len(df))
     df.drop(
@@ -136,7 +155,7 @@ def nn(X_train, Y_train, X_test, Y_test, stringLabels):
     vis.confusionMatrix(clf, X_test, Y_test, stringLabels)
 
 def generateDatasets():
-    for i in range(0, 4):
+    for i in range(0, 1):
     
         # Load CSV
         hybrid_segments = pd.read_csv(C.FUSED_DATA_CSV)
@@ -160,10 +179,8 @@ def generateDatasets():
         hybrid_segment_labels_numeric = convertLabeltoInt(
             hybrid_segments[C.HYBRID_SELECTED_LABELS], 
             stringLabels
-        )
-        # number_of_elements = countLabels(hybrid_segment_labels_numeric, stringLabels)
-        hybrid_segments = removeUntilEqual(hybrid_segments, hybrid_segment_labels_numeric)
-        hybrid_segments = hybrid_segments.sample(frac=1).reset_index(drop=True)
+        )        
+        
         
         # Normalize or Standardize
         if(C.NORMALIZE_ELSE_STANDARDIZE):
@@ -171,15 +188,44 @@ def generateDatasets():
         else:
             hybrid_segments = standardize(hybrid_segments)
             
+        original = hybrid_segments    
+            
+        # number_of_elements = countLabels(hybrid_segment_labels_numeric, stringLabels)
+        hybrid_segments = removeUntilEqual(hybrid_segments, hybrid_segment_labels_numeric)
+        
+        hybrid_segments = hybrid_segments.sample(frac=1).reset_index(drop=True)
+                    
         vis.dataDistribution(stringLabels, hybrid_segment_labels_numeric)
         
+        
+        hybrid_segment_labels_numeric = convertLabeltoInt(
+            hybrid_segments[C.HYBRID_SELECTED_LABELS], 
+            stringLabels
+        )
         # Split file into Train- and Test-Data
-        train, test = train_test_split(hybrid_segments, test_size=0.2)
-        print("Trainings- und Testdatenset:", len(train), len(test))
+        #train, test = custom_train_test_split(hybrid_segments, hybrid_segment_labels_numeric)
+        
+        train, test = train_test_split(hybrid_segments, test_size=0.5)
+        original = original[~original.isin(test)].dropna()
+        print("Trainings- und Testdatenset:", len(original), len(test))
         print('------------------------------------------------')
     
-        train.to_csv(C.DATASET_FOLDER + "train_" + str(i) + ".csv")
+        original.to_csv(C.DATASET_FOLDER + "train_" + str(i) + ".csv")
         test.to_csv(C.DATASET_FOLDER + "test_" + str(i) + ".csv")
+        
+        
+        train_numeric = convertLabeltoInt(
+            original[C.HYBRID_SELECTED_LABELS], 
+            stringLabels
+        )
+        test_numeric = convertLabeltoInt(
+            test[C.HYBRID_SELECTED_LABELS], 
+            stringLabels
+        )
+        vis.dataDistribution(stringLabels, train_numeric)
+        vis.dataDistribution(stringLabels, test_numeric)
+        
+        
 
 def loadDataset(i):
     train = pd.read_csv(C.DATASET_FOLDER + "train_" + str(i) + ".csv")
@@ -211,7 +257,10 @@ if(__name__ == "__main__"):
         
     else:
         # Load Data
-        train, test = loadDataset(1)
+        train, test = loadDataset(0)
+        
+        print(test['Sublabel'].value_counts(ascending=True))
+        print(train['Sublabel'].value_counts(ascending=True))
         
         # Load Training Data
         X_train = np.array(train[C.HYBRID_SELECTED_FEATURES])
@@ -232,31 +281,22 @@ if(__name__ == "__main__"):
         vis.dataDistribution(stringLabels, Y_train)
         
         # Machine Learning
-        # dt(X_train, Y_train, X_test, Y_test, stringLabels)
-        # rf(X_train, Y_train, X_test, Y_test, stringLabels)
-        # svc(X_train, Y_train, X_test, Y_test, stringLabels)
-        # knn(X_train, Y_train, X_test, Y_test, stringLabels)
-        # nn(X_train, Y_train, X_test, Y_test, stringLabels)
+        dt(X_train, Y_train, X_test, Y_test, stringLabels)
+        rf(X_train, Y_train, X_test, Y_test, stringLabels)
+        svc(X_train, Y_train, X_test, Y_test, stringLabels)
+        knn(X_train, Y_train, X_test, Y_test, stringLabels)
+        nn(X_train, Y_train, X_test, Y_test, stringLabels)
         
-        clf = RandomForestClassifier()
-        sfs1 = SFS(     
-            clf, 
-            k_features=8, 
-            forward=True, 
-            floating=False, 
-            verbose=2,
-            scoring='accuracy',
-            cv=5,
-            n_jobs=-1
-        )
-        sfs1 = sfs1.fit(X_train, Y_train, custom_feature_names=C.HYBRID_SELECTED_FEATURES)
-        vis.confusionMatrix(sfs1, X_test, Y_test, stringLabels)
-    
-    
-    
-    
-    
-    
-    
-    
-    
+        # clf = RandomForestClassifier()
+        # sfs1 = SFS(     
+        #     clf, 
+        #     k_features=8, 
+        #     forward=True, 
+        #     floating=False, 
+        #     verbose=2,
+        #     scoring='accuracy',
+        #     cv=5,
+        #     n_jobs=-1
+        # )
+        # sfs1 = sfs1.fit(X_train, Y_train, custom_feature_names=C.HYBRID_SELECTED_FEATURES)
+        # vis.confusionMatrix(sfs1, X_test, Y_test, stringLabels)   
