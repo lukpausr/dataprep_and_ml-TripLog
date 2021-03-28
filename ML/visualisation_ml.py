@@ -2,6 +2,8 @@ import matplotlib.pyplot as plt
 import numpy as np
 from sklearn import metrics
 
+import tikzplotlib
+
 import sys, shutil, os
 sys.path.insert(0,'..')
 import triplog_constants as C
@@ -16,19 +18,25 @@ def boxplotByFeature(df, stringLabels, features=C.HYBRID_SELECTED_FEATURES):
             df_label.append(df.loc[df["numeric"] == i])
             df_features.append(df_label[i][feature])
         
-        fig = plt.figure(figsize =(10, 10)) 
+        fig = plt.figure(figsize =(20, 10)) 
   
         # Creating axes instance 
         ax = fig.add_axes([0, 0, 1, 1]) 
         # Creating plot 
-        bp = ax.boxplot(df_features)  
+        bp = ax.boxplot(df_features, showfliers=False)  
         # show plot 
         print(range(1, len(stringLabels)+1))
         
-        plt.xticks(range(1, len(stringLabels)+1), stringLabels)
+        stringLabelsWithoutSpaces = []
+        for i in range(0, len(stringLabels)):
+            stringLabelsWithoutSpaces.append(stringLabels[i].replace("_", " "))
+            
+        
+        plt.xticks(range(1, len(stringLabels)+1), stringLabelsWithoutSpaces)
+        plt.xticks(rotation=90)
         plt.title(feature)
+        tikzplotlib.save("C:/Users/Lukas/Desktop/Studienarbeit/T3200/images/boxplots/" + feature + ".tex")
         plt.show() 
-
 
 
       
