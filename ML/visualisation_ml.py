@@ -35,7 +35,13 @@ def boxplotByFeature(df, stringLabels, features=C.HYBRID_SELECTED_FEATURES):
         plt.xticks(range(1, len(stringLabels)+1), stringLabelsWithoutSpaces)
         plt.xticks(rotation=90)
         plt.title(feature)
-        tikzplotlib.save("C:/Users/Lukas/Desktop/Studienarbeit/T3200/images/boxplots/" + feature + ".tex")
+        tikzplotlib.save(
+            "C:/Users/Lukas/Desktop/Studienarbeit/T3200/images/boxplots/" + feature + ".tex",
+            axis_width = "12cm",
+            axis_height = "8cm",
+            textsize = 10.0,
+            flavor = "latex"
+        )
         plt.show() 
 
 
