@@ -8,6 +8,22 @@ import sys, shutil, os
 sys.path.insert(0,'..')
 import triplog_constants as C
 
+def beautifyStringLabels(stringLabels):
+    labels = []
+    for i in range(0, len(stringLabels)):
+        for j in range(0, len(C.CLEAN_LABELS)):
+            if(C.CLEAN_LABELS[j][0] in stringLabels[i]):
+                labels.append(stringLabels[i].replace(C.CLEAN_LABELS[j][0], C.CLEAN_LABELS[j][1]))
+    print(labels)        
+    return labels
+
+def beautifyBoxplotTitles(feature):
+    for j in range(0, len(C.CLEAN_UNITS)):
+        if feature in C.CLEAN_UNITS[j][0]:
+            label = C.CLEAN_UNITS[j][0] + " in " + C.CLEAN_UNITS[j][1]
+    print(label)        
+    return label
+
 def boxplotByFeature(df, stringLabels, features=C.HYBRID_SELECTED_FEATURES):
 
 
@@ -27,14 +43,12 @@ def boxplotByFeature(df, stringLabels, features=C.HYBRID_SELECTED_FEATURES):
         # show plot 
         print(range(1, len(stringLabels)+1))
         
-        stringLabelsWithoutSpaces = []
-        for i in range(0, len(stringLabels)):
-            stringLabelsWithoutSpaces.append(stringLabels[i].replace("_", " "))
-            
+        beautifulLabels = beautifyStringLabels(stringLabels)
+        beautifulTitles = beautifyBoxplotTitles(feature)
         
-        plt.xticks(range(1, len(stringLabels)+1), stringLabelsWithoutSpaces)
+        plt.xticks(range(1, len(stringLabels)+1), beautifulLabels)
         plt.xticks(rotation=90)
-        plt.title(feature)
+        plt.title(beautifulTitles)
         tikzplotlib.save(
             "C:/Users/Lukas/Desktop/Studienarbeit/T3200/images/boxplots/" + feature + ".tex",
             axis_width = "12cm",

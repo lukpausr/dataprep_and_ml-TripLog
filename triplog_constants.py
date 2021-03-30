@@ -36,6 +36,41 @@ VIDEO_DESTINATION_FOLDER = "C:/Users/Lukas/Desktop/"
 # =============================================================================
 # Hybrid Machine Learning
 # =============================================================================
+CLEAN_LABELS =  [
+                    ['Car_Hybrid',          'Hybridauto'    ],
+                    ['Car_Conventional',    'Auto'          ],
+                    ['Car_Electric',        'Elektroauto'   ],
+                    ['Foot_Walking',        'Gehen'         ],
+                    ['Foot_Running',        'Joggen'        ],
+                    ['Train_Suburban',      'S-Bahn'        ],
+                    ['Train_City',          'U-Bahn'        ],
+                    ['Bike_Conventional',   'Fahrrad'       ],
+                    ['Bike_Electric',       'e-Bike'        ],
+                    ['Bus_Conventional',    'Bus'           ]
+                ]
+CLEAN_UNITS =   [
+                    ['avgSpeed',            '$m/s$'           ], 
+                    ['maxSpeed',            '$m/s$'           ],             
+                    ['minAcc',              '$m/s^2$'       ], 
+                    ['maxAcc',              '$m/s^2$'       ], 
+                    ['tow',                 '$s$'             ], 
+                    ['towAvgSpeed',         '$s$'             ], 
+                    ['maxFreqACC',          '$Hz$'            ],
+                    ['maxFreqGYRO',         '$Hz$'            ],
+                    ['maxSingleFreqACC',    '$Hz$'            ],
+                    ['maxSingleFreqGYRO',   '$Hz$'            ],
+                    ['stdSpeed',            '$m/s$'           ], 
+                    ['varSpeed',            '$(m/s)^2$'       ], 
+                    ['stdAcc',              '$m/s^2$'       ], 
+                    ['varAcc',              '$m/(s^2)^2$'   ],
+                    ['sensor_stdAcc',       '$Hz$'            ], 
+                    ['sensor_varAcc',       '$Hz^2$'          ], 
+                    ['sensor_stdGyro',      '$Hz$'            ], 
+                    ['sensor_varGyro',      '$Hz^2$'          ]
+                ]
+# =============================================================================
+# Hybrid Machine Learning
+# =============================================================================
 NORMALIZE_ELSE_STANDARDIZE = False
 COMPRESS_LABELS = False
 GENERATE_ELSE_LOAD_DATA = False
