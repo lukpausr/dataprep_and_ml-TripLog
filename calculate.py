@@ -116,13 +116,13 @@ def calculate_data(times_total, times_diff, distances_total, distances_diff, pri
     velocities = [0]
     #in km/h
     for i in range(1, len(distances_diff)):
-        velocities.append(distances_diff[i]*3.6/(times_diff[i]))
+        velocities.append(distances_diff[i]/(times_diff[i]))
 
     #Berechnen der Beschleunigungen
     accelerations = [0]
     #in m/s^2
     for i in range(1, len(velocities)):
-        accelerations.append((velocities[i] - velocities[i-1]) / (3.6*(times_diff[i])))
+        accelerations.append( (velocities[i] - velocities[i-1]) / (times_diff[i]))
 
     #Durchschnitt- und Maximalgeschwindigkeit
     max_velocity = max(velocities)
@@ -132,7 +132,7 @@ def calculate_data(times_total, times_diff, distances_total, distances_diff, pri
     times_wo_waiting = []
     velocities_wo_waiting = []
     for i in range(len(velocities)):
-        if velocities[i] > 2:
+        if velocities[i] > (2/3.6):
             velocities_wo_waiting.append(velocities[i])
             times_wo_waiting.append(times_diff[i])
     try:
