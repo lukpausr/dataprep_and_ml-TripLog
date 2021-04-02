@@ -11,7 +11,7 @@ sys.path.insert(0,'..')
 #import dataprep_triplog.triplog_constants as C
 import triplog_constants as C
 
-
+import asyncio
 
 import pandas as pd
 import numpy as np
@@ -21,6 +21,7 @@ import tensorflow as tf
 import keras
 
 import visualisation_ml as vis
+import calculate as cal
 
 from sklearn.model_selection import train_test_split
 from sklearn.ensemble import RandomForestClassifier
@@ -232,7 +233,7 @@ def loadDataset(i):
     test = pd.read_csv(C.DATASET_FOLDER + "test_" + str(i) + ".csv")    
     return train, test
 
-if(__name__ == "__main__"):
+async def main():
     
     # Load CSV for String Labels
     hybrid_segments = pd.read_csv(C.FUSED_DATA_CSV) 
@@ -280,8 +281,8 @@ if(__name__ == "__main__"):
         vis.dataDistribution(stringLabels, hybrid_segment_labels_numeric)
         vis.dataDistribution(stringLabels, Y_train)
         
-        vis.boxplotByFeature(hybrid_segments, stringLabels)
-        
+        #vis.boxplotByFeature(hybrid_segments, stringLabels)
+        await vis.showPredictionOnMap(C.OFFLINE_TEST_PATH_GPS)
         # Machine Learning
         # dt(X_train, Y_train, X_test, Y_test, stringLabels)
         # rf(X_train, Y_train, X_test, Y_test, stringLabels)
@@ -302,3 +303,8 @@ if(__name__ == "__main__"):
         # )
         # sfs1 = sfs1.fit(X_train, Y_train, custom_feature_names=C.HYBRID_SELECTED_FEATURES)
         # vis.confusionMatrix(sfs1, X_test, Y_test, stringLabels)   
+        
+if(__name__ == "__main__"):
+    import nest_asyncio
+    nest_asyncio.apply()  
+    asyncio.run(main())
