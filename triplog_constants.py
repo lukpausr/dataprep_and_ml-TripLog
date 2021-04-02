@@ -6,7 +6,7 @@ VALIDATE = False
 
 SECONDS_CUT_START = 60
 SECONDS_CUT_END = 60
-SECONDS_SENSOR_SEGMENT = 30
+SECONDS_SENSOR_SEGMENT = 60
 
 WRITE_SENSOR_DATA_TO_FILE = False
 
@@ -23,7 +23,7 @@ SENSOR_INTERPOLATE_FREQUENCY_INT = 50       # [Hz]
 # =============================================================================
 # Fast Fourier Transformation
 # =============================================================================
-SHOW_FFT_PLOTS = True
+SHOW_FFT_PLOTS = False
 DATA_FREQUENCY_HZ = SENSOR_INTERPOLATE_FREQUENCY_INT
 SAMPLE_POINTS = SECONDS_SENSOR_SEGMENT * DATA_FREQUENCY_HZ
 
@@ -34,7 +34,7 @@ GRAPH_PICTURE_FOLDER = "C:/Users/Lukas/Desktop/Graphen"
 VIDEO_DESTINATION_FOLDER = "C:/Users/Lukas/Desktop/"
 
 # =============================================================================
-# Hybrid Machine Learning
+# Hybrid Machine Learning Visualisation
 # =============================================================================
 CLEAN_LABELS =  [
                     ['Car_Hybrid',          'Hybridauto'    ],
@@ -99,6 +99,7 @@ HYBRID_SELECTED_LABELS =    [
                                 'Sublabel', 
                             ]
 DATASET_FOLDER = SENSOR_DATA_SEGMENT_FOLDER + "dataset/"
+OFFLINE_TEST_PATH_GPS = r"C:\Users\Lukas\Desktop\1617195745679_Scooter_Electric_GPS.csv"
 
 # =============================================================================
 # Start Program
