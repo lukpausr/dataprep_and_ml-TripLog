@@ -2,11 +2,11 @@ import os
 import pandas as pd 
 import calculate
 import numpy as np 
-import multiprocessing
+#import multiprocessing
 import asyncio
 
 import triplog_constants as C
-import ML.visualisation_ml as vis
+#import ML.visualisation_ml as vis
 import FeatureExtraction.calculate_sensor as calcSensor
 
 pd.set_option('display.max_columns', None)  # or 1000
@@ -152,6 +152,40 @@ def data_import(path):
     return(ml_csv)
     # return(records)
     # print(ml_csv) 
+    
+async def raw_gps_interpolation(path_gps):
+    df = pd.read_csv(path_gps, sep = ",")
+    df = df[1:-1]
+    
+    start_time = df['Time_in_s'].iloc[0]
+    df['Time_in_s'] = df['Time_in_s'] - start_time    
+        
+    df_gpsData = df[['Latitude', 'Longitude', 'Altitude']].copy()
+    df_gpsData.index = pd.to_datetime(df['Time_in_s'], unit = 's')
+
+    import time        
+    start = time.time()
+    print("\tStart Interpolation")
+    
+    gps = asyncio.create_task(
+        reindex_and_interpolate(
+            df_gpsData, 
+            C.GPS_INTERPOLATE_FREQUENCY
+        )
+    )
+    df_res_gps = await gps
+    
+    end = time.time()
+    print("\t--> Finished: ", end - start) 
+    
+    ptbc_s = C.SECONDS_CUT_START                # Points to be cut (start)
+    ptbc_e = C.SECONDS_CUT_END                  # Points to be cut (end)
+    pt_seg = C.SECONDS_SENSOR_SEGMENT           # Points per segment                                                    # 1 Point per secon   
+                              
+    df_res_gps = df_res_gps[ptbc_s:len(df_res_gps)-ptbc_e] 
+    df_res_gps['Time_in_s'] = df_res_gps.index.astype(np.int64) // 10**9
+    
+    return df_res_gps
 
 async def preperate_gps(record):   
 # =============================================================================
@@ -221,17 +255,10 @@ async def preperate_gps(record):
             )     
             record.splitted_gps.append(obj)        
     
-
-# def interpolate_data(df):
-#     # =========================================================================
-#     # Resampling der Daten
-#     # https://stackoverflow.com/questions/47148446/pandas-resample-interpolate-is-producing-nans?noredirect=1&lq=1
-#     # =========================================================================
-#     oidx = df.index
-#     nidx = pd.date_range(oidx.min(), oidx.max(), freq = C.INTERPOLATE_FREQUENCY)
-#     df_res = df.reindex(oidx.union(nidx)).interpolate('index').reindex(nidx)
-#     return df_res
-
+# =========================================================================
+# Resampling der Daten
+# https://stackoverflow.com/questions/47148446/pandas-resample-interpolate-is-producing-nans?noredirect=1&lq=1
+# =========================================================================
 async def reindex_and_interpolate(df, frequency=C.INTERPOLATE_FREQUENCY):
     oidx = df.index
     nidx = pd.date_range(oidx.min(), oidx.max(), freq=frequency)

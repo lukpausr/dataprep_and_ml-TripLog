@@ -1,7 +1,7 @@
-from gpx_csv_converter import Converter
+#from gpx_csv_converter import Converter
 import calculate
-import pandas as pd
-import os
+#import pandas as pd
+#import os
 import gpxpy
 import numpy as np
 
@@ -93,7 +93,7 @@ def calculateValues(path, jumpSize = 1):
     return Result(lats, lons, times, elev, distances_total, distances_diff, begin, times_total, times_diff, slopes, velocities, accelerations)
 
 def printMultiplot(x_axis, y_axis, x_label, y_label, label, save_path=None):
-    
+    from matplotlib import pyplot as plt
     plt.rcParams["figure.figsize"] = (20,10)
     
     for i in range(len(x_axis)):
@@ -129,37 +129,38 @@ class Result:
         self.accelerations = accelerations
     
 
-import matplotlib.pyplot as plt # v 3.0.3
-
-path = "Z:/2020-JG18-T31Bewegungsanalyse-Pelz-Kroener/05-Messfahrten_Daten/Messfahrt2.gpx"
-save_path = "B:\Privat\Studium\Studienarbeit\dataprep_TripLog-main" 
-
-values = []
-
-values.append(calculateValues(path, 1))
-values.append(calculateValues(path, 2))
-values.append(calculateValues(path, 5))
-
-jump_sizes = ["Alle 3s", "Alle 6s", "Alle 15s"]
-
-
-speed = []
-distance = []
-times = []
-acceleration = []
-for i in range(len(values)):
-    speed.append(values[i].velocities)
-    times.append(values[i].times_total)
-    distance.append(values[i].distances_total)
-    acceleration.append(values[i].accelerations)
+if __name__ == "__MAIN__":
+    import matplotlib.pyplot as plt # v 3.0.3
     
-printMultiplot(times, speed, "Zeit", "Geschwindigkeit", jump_sizes)
-
-printMultiplot(times, distance, "Zeit", "Strecke", jump_sizes)
-
-printMultiplot(distance, speed, "Strecke", "Geschwindigkeit", jump_sizes)
-
-printMultiplot(times, acceleration, "Zeit", "Beschleunigung", jump_sizes, save_path)
+    path = "Z:/2020-JG18-T31Bewegungsanalyse-Pelz-Kroener/05-Messfahrten_Daten/Messfahrt2.gpx"
+    save_path = "B:\Privat\Studium\Studienarbeit\dataprep_TripLog-main" 
+    
+    values = []
+    
+    values.append(calculateValues(path, 1))
+    values.append(calculateValues(path, 2))
+    values.append(calculateValues(path, 5))
+    
+    jump_sizes = ["Alle 3s", "Alle 6s", "Alle 15s"]
+    
+    
+    speed = []
+    distance = []
+    times = []
+    acceleration = []
+    for i in range(len(values)):
+        speed.append(values[i].velocities)
+        times.append(values[i].times_total)
+        distance.append(values[i].distances_total)
+        acceleration.append(values[i].accelerations)
+        
+    printMultiplot(times, speed, "Zeit", "Geschwindigkeit", jump_sizes)
+    
+    printMultiplot(times, distance, "Zeit", "Strecke", jump_sizes)
+    
+    printMultiplot(distance, speed, "Strecke", "Geschwindigkeit", jump_sizes)
+    
+    printMultiplot(times, acceleration, "Zeit", "Beschleunigung", jump_sizes, save_path)
 
 
 

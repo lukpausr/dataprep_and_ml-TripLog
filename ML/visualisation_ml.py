@@ -1,12 +1,49 @@
 import matplotlib.pyplot as plt
 import numpy as np
+import pandas as pd
 from sklearn import metrics
+import asyncio
 
 import tikzplotlib
+import folium
 
 import sys, shutil, os
 sys.path.insert(0,'..')
+
 import triplog_constants as C
+import data_import as DI
+import calculate as cal
+
+
+async def showPredictionOnMap(gps_offline_test_path):
+    
+    df = await DI.raw_gps_interpolation(gps_offline_test_path)
+    features = cal.ml_csv(df, printReq=True)
+    
+    print(df.head(20))
+    
+    m = folium.Map(location=[45.5236, -122.6750])
+    m.fit_bounds(
+        [
+            [df['Latitude'].min(), df['Longitude'].min()],
+            [df['Latitude'].max(), df['Longitude'].max()],
+        ]
+    )
+    
+    locations = df[['Latitude', 'Longitude']]
+    locationlist = locations.values.tolist()
+    
+    print(locations)
+    
+    folium.PolyLine(locationlist, weight=5, color='blue').add_to(m)
+    
+    m.save("map.html")
+
+    
+    return
+
+
+
 
 def beautifyStringLabels(stringLabels):
     labels = []
@@ -25,8 +62,6 @@ def beautifyBoxplotTitles(feature):
     return label
 
 def boxplotByFeature(df, stringLabels, features=C.HYBRID_SELECTED_FEATURES):
-
-
     for feature in features:
         df_label = []
         df_features = []

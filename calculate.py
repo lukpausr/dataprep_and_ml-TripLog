@@ -1,7 +1,11 @@
 import pandas as pd
 import numpy as np
-from gpx_csv_converter import Converter
+#from gpx_csv_converter import Converter
 from math import sin, cos, sqrt, atan2, radians
+
+import matplotlib.pyplot as plt
+
+import visualize as v
 
 # Funktion um Distanz (m) zw. zwei GPS-Punkten zu bestimmen
 def calc_distance(lat1, lon1, lat2, lon2):
@@ -92,7 +96,7 @@ def get_data(csv):
     # Zeiten in Sekunden
     return(times_total, times_diff, distances_total, distances_diff)
 
-def calculate_data(times_total, times_diff, distances_total, distances_diff):
+def calculate_data(times_total, times_diff, distances_total, distances_diff, printReq=False):
     """
     Berechnet aus den Daten von get_data() die Features der GPS-Daten.
 
@@ -182,15 +186,21 @@ def calculate_data(times_total, times_diff, distances_total, distances_diff):
             "VARACC"
         ]
     )
+    
+    if printReq is True:
+        plt.plot(times_total, velocities)
+    
+    
+    
     return(data)
 
-def ml_csv(csv):
+def ml_csv(df, printReq=False):
     """
     Erstellt aus dem DataFrame einer csv-Datei ein DataFrame mit den ML-Features.
 
     Parameters
     ----------
-    csv : Pandas.DataFrame
+    df : Pandas.DataFrame
         Eine GPS-Datei, die in einem DataFrame eingelesen wurde.
 
     Returns
@@ -198,8 +208,8 @@ def ml_csv(csv):
     DataFrame mit ML-Features.
 
     """
-    times_total, times_diff, distances_total, distances_diff = get_data(csv)
-    data = calculate_data(times_total, times_diff, distances_total, distances_diff) 
+    times_total, times_diff, distances_total, distances_diff = get_data(df)
+    data = calculate_data(times_total, times_diff, distances_total, distances_diff, printReq) 
 
     return(data)
 
