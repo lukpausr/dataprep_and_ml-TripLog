@@ -214,8 +214,8 @@ def calculate_data(times_total, times_diff, distances_total, distances_diff, spe
         
         tikzplotlib.save(
             "C:/Users/Lukas/Desktop/Studienarbeit/T3200/images/plots/" + str(time.time_ns()) + ".tex",
-            axis_width = "12cm",
-            axis_height = "8cm",
+            axis_width = "18cm",
+            axis_height = "6cm",
             textsize = 10.0,
             flavor = "latex"
         )
