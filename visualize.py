@@ -93,6 +93,7 @@ def calculateValues(path, jumpSize = 1):
     return Result(lats, lons, times, elev, distances_total, distances_diff, begin, times_total, times_diff, slopes, velocities, accelerations)
 
 def printMultiplot(x_axis, y_axis, x_label, y_label, label, save_path=None):
+    
     from matplotlib import pyplot as plt
     plt.rcParams["figure.figsize"] = (20,10)
     
@@ -130,7 +131,6 @@ class Result:
     
 
 if __name__ == "__MAIN__":
-    import matplotlib.pyplot as plt # v 3.0.3
     
     path = "Z:/2020-JG18-T31Bewegungsanalyse-Pelz-Kroener/05-Messfahrten_Daten/Messfahrt2.gpx"
     save_path = "B:\Privat\Studium\Studienarbeit\dataprep_TripLog-main" 

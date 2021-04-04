@@ -153,14 +153,21 @@ def data_import(path):
     # return(records)
     # print(ml_csv) 
     
-async def raw_gps_interpolation(path_gps):
+async def raw_gps_interpolation(path_gps, enableMedianFiltering=False):
     df = pd.read_csv(path_gps, sep = ",")
     df = df[1:-1]
+    
+    # Median filtering test
+    if enableMedianFiltering is True:
+        df['Latitude'] = df['Latitude'].rolling(window = 10, center=True).median()
+        df['Latitude'] = df['Latitude'].fillna(method='bfill').fillna(method='ffill')
+        df['Longitude'] = df['Longitude'].rolling(window = 10, center=True).median()
+        df['Longitude'] = df['Longitude'].fillna(method='bfill').fillna(method='ffill')
     
     start_time = df['Time_in_s'].iloc[0]
     df['Time_in_s'] = df['Time_in_s'] - start_time    
         
-    df_gpsData = df[['Latitude', 'Longitude', 'Altitude']].copy()
+    df_gpsData = df[['Latitude', 'Longitude', 'Altitude', 'Speed']].copy()
     df_gpsData.index = pd.to_datetime(df['Time_in_s'], unit = 's')
 
     import time        

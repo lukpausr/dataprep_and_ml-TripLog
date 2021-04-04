@@ -17,8 +17,10 @@ import calculate as cal
 
 async def showPredictionOnMap(gps_offline_test_path):
     
-    df = await DI.raw_gps_interpolation(gps_offline_test_path)
-    features = cal.ml_csv(df, printReq=True)
+    # df = await DI.raw_gps_interpolation(gps_offline_test_path)
+    # features = cal.ml_csv(df, printReq=True) 
+    df = await DI.raw_gps_interpolation(gps_offline_test_path, enableMedianFiltering=False)   
+    features = cal.ml_csv(df, printReq=False) 
     
     print(df.head(20))
     

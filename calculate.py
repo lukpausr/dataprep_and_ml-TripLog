@@ -6,6 +6,7 @@ from math import sin, cos, sqrt, atan2, radians
 import matplotlib.pyplot as plt
 
 import visualize as v
+import tikzplotlib
 
 # Funktion um Distanz (m) zw. zwei GPS-Punkten zu bestimmen
 def calc_distance(lat1, lon1, lat2, lon2):
@@ -94,9 +95,12 @@ def get_data(csv):
         distances_total.append(total)
         distances_diff.append(dist)
     # Zeiten in Sekunden
-    return(times_total, times_diff, distances_total, distances_diff)
+    
+    speedGoogle = csv["Speed"]
+    
+    return(times_total, times_diff, distances_total, distances_diff, speedGoogle)
 
-def calculate_data(times_total, times_diff, distances_total, distances_diff, printReq=False):
+def calculate_data(times_total, times_diff, distances_total, distances_diff, speedGoogle, printReq=False):
     """
     Berechnet aus den Daten von get_data() die Features der GPS-Daten.
 
@@ -188,8 +192,34 @@ def calculate_data(times_total, times_diff, distances_total, distances_diff, pri
     )
     
     if printReq is True:
-        plt.plot(times_total, velocities)
-    
+        import time
+        # Test for median filtering
+        #from pandas.core.window import Rolling
+        #threshold = 3
+        fig = plt.figure(figsize =(20, 10)) 
+        plt.ylim(0, 60)
+        plt.xlim(0, 2000)
+        plt.ylabel("Geschwindigkeit in $m/s$")
+        plt.xlabel("Zeit in $s$")
+        df = pd.DataFrame()
+        df['vel'] = velocities
+        df['median'] = df['vel'].rolling(window = 10, center=True).median()
+        df['median'] = df['median'].fillna(method='bfill').fillna(method='ffill')
+        #(median(df['vel'], window = 3, center=True).fillna(method='bfill').fillna(method='ffill'))        
+        
+        plt.plot(times_total, df['vel'], linewidth=3, label="Ohne Vorverarbeitung")
+        plt.plot(times_total, list(df['median'].values), linewidth=3, label="Medianfilter")     
+        plt.plot(times_total, speedGoogle, linewidth=3, label="Google")
+        plt.legend(loc="upper left")
+        
+        tikzplotlib.save(
+            "C:/Users/Lukas/Desktop/Studienarbeit/T3200/images/plots/" + str(time.time_ns()) + ".tex",
+            axis_width = "12cm",
+            axis_height = "8cm",
+            textsize = 10.0,
+            flavor = "latex"
+        )
+        
     
     
     return(data)
@@ -208,8 +238,8 @@ def ml_csv(df, printReq=False):
     DataFrame mit ML-Features.
 
     """
-    times_total, times_diff, distances_total, distances_diff = get_data(df)
-    data = calculate_data(times_total, times_diff, distances_total, distances_diff, printReq) 
+    times_total, times_diff, distances_total, distances_diff, speedGoogle = get_data(df)
+    data = calculate_data(times_total, times_diff, distances_total, distances_diff, speedGoogle, printReq) 
 
     return(data)
 
