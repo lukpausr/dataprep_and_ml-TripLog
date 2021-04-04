@@ -281,14 +281,14 @@ async def main():
         vis.dataDistribution(stringLabels, hybrid_segment_labels_numeric)
         vis.dataDistribution(stringLabels, Y_train)
         
-        #vis.boxplotByFeature(hybrid_segments, stringLabels)
+        vis.boxplotByFeature(hybrid_segments, stringLabels)
         await vis.showPredictionOnMap(C.OFFLINE_TEST_PATH_GPS)
         # Machine Learning
-        # dt(X_train, Y_train, X_test, Y_test, stringLabels)
-        # rf(X_train, Y_train, X_test, Y_test, stringLabels)
-        # svc(X_train, Y_train, X_test, Y_test, stringLabels)
-        # knn(X_train, Y_train, X_test, Y_test, stringLabels)
-        # nn(X_train, Y_train, X_test, Y_test, stringLabels)
+        dt(X_train, Y_train, X_test, Y_test, stringLabels)
+        rf(X_train, Y_train, X_test, Y_test, stringLabels)
+        svc(X_train, Y_train, X_test, Y_test, stringLabels)
+        knn(X_train, Y_train, X_test, Y_test, stringLabels)
+        nn(X_train, Y_train, X_test, Y_test, stringLabels)
         
         # clf = RandomForestClassifier()
         # sfs1 = SFS(     

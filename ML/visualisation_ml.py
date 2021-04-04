@@ -19,8 +19,8 @@ async def showPredictionOnMap(gps_offline_test_path):
     
     # df = await DI.raw_gps_interpolation(gps_offline_test_path)
     # features = cal.ml_csv(df, printReq=True) 
-    df = await DI.raw_gps_interpolation(gps_offline_test_path, enableMedianFiltering=False)   
-    features = cal.ml_csv(df, printReq=False) 
+    df = await DI.raw_gps_interpolation(gps_offline_test_path, enableMedianFiltering=True)   
+    features = cal.ml_csv(df, printReq=True) 
     
     print(df.head(20))
     
@@ -35,7 +35,7 @@ async def showPredictionOnMap(gps_offline_test_path):
     locations = df[['Latitude', 'Longitude']]
     locationlist = locations.values.tolist()
     
-    print(locations)
+    #print(locations)
     
     folium.PolyLine(locationlist, weight=5, color='blue').add_to(m)
     
