@@ -159,10 +159,10 @@ async def raw_gps_interpolation(path_gps, enableMedianFiltering=False):
     
     # Median filtering test
     if enableMedianFiltering is True:
-        df['Latitude'] = df['Latitude'].rolling(window = 10, center=True).median()
-        df['Latitude'] = df['Latitude'].fillna(method='bfill').fillna(method='ffill')
-        df['Longitude'] = df['Longitude'].rolling(window = 10, center=True).median()
-        df['Longitude'] = df['Longitude'].fillna(method='bfill').fillna(method='ffill')
+        df['latmed'] = df['Latitude'].rolling(window = 10, center=True).median()
+        df['Latitude'] = df['latmed'].fillna(method='bfill').fillna(method='ffill')
+        df['lonmed'] = df['Longitude'].rolling(window = 10, center=True).median()
+        df['Longitude'] = df['lonmed'].fillna(method='bfill').fillna(method='ffill')
     
     start_time = df['Time_in_s'].iloc[0]
     df['Time_in_s'] = df['Time_in_s'] - start_time    
@@ -207,7 +207,7 @@ async def preperate_gps(record):
         start_time = df['Time_in_s'].iloc[0]
         df['Time_in_s'] = df['Time_in_s'] - start_time    
             
-        df_gpsData = df[['Latitude', 'Longitude', 'Altitude']].copy()
+        df_gpsData = df[['Latitude', 'Longitude', 'Altitude', 'Speed']].copy()
         df_gpsData.index = pd.to_datetime(df['Time_in_s'], unit = 's')
 
         import time        
@@ -541,7 +541,7 @@ async def preperate_data(records):
     count = list(range(len(records)))
     
     for record, i in zip(records, count):
-        if(record.valid) and "Walking" in record.sublabel:
+        if(record.valid):
             
             print("######################################")
             print("File ", i, " of ", len(records))

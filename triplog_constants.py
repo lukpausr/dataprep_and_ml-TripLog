@@ -15,11 +15,11 @@ SENSOR_DATA_CSV = SENSOR_DATA_SEGMENT_FOLDER + "sensorSegments.csv"
 GPS_DATA_CSV = SENSOR_DATA_SEGMENT_FOLDER + "gpsSegments.csv"
 FUSED_DATA_CSV = SENSOR_DATA_SEGMENT_FOLDER + "fusedSegments.csv"
 
-# INTERPOLATE_SIZE = 1000
 INTERPOLATE_FREQUENCY = '20ms'              # [s]
 GPS_INTERPOLATE_FREQUENCY = '1s'            # [s]
 SENSOR_INTERPOLATE_FREQUENCY_INT = 50       # [Hz]
 
+USE_GOOGLE_SPEEDS = True
 # =============================================================================
 # Fast Fourier Transformation
 # =============================================================================
@@ -71,7 +71,7 @@ CLEAN_UNITS =   [
 # =============================================================================
 # Hybrid Machine Learning
 # =============================================================================
-NORMALIZE_ELSE_STANDARDIZE = False
+NORMALIZE_ELSE_STANDARDIZE = True
 COMPRESS_LABELS = False
 GENERATE_ELSE_LOAD_DATA = False
 HYBRID_SELECTED_FEATURES = [

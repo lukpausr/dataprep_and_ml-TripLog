@@ -7,6 +7,7 @@ import matplotlib.pyplot as plt
 
 import visualize as v
 import tikzplotlib
+import triplog_constants as C
 
 # Funktion um Distanz (m) zw. zwei GPS-Punkten zu bestimmen
 def calc_distance(lat1, lon1, lat2, lon2):
@@ -96,7 +97,7 @@ def get_data(csv):
         distances_diff.append(dist)
     # Zeiten in Sekunden
     
-    speedGoogle = csv["Speed"]
+    speedGoogle = list(csv["Speed"].values)
     
     return(times_total, times_diff, distances_total, distances_diff, speedGoogle)
 
@@ -117,10 +118,13 @@ def calculate_data(times_total, times_diff, distances_total, distances_diff, spe
 
     """
     #Berechnen der Geschwindigkeiten
-    velocities = [0]
-    #in km/h
-    for i in range(1, len(distances_diff)):
-        velocities.append(distances_diff[i]/(times_diff[i]))
+    if C.USE_GOOGLE_SPEEDS is True:
+        velocities = speedGoogle
+    else:
+        velocities = [0]
+        #in km/h
+        for i in range(1, len(distances_diff)):
+            velocities.append(distances_diff[i]/(times_diff[i]))
 
     #Berechnen der Beschleunigungen
     accelerations = [0]
