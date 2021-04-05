@@ -187,7 +187,7 @@ async def raw_gps_interpolation(path_gps, enableMedianFiltering=False):
     
     ptbc_s = C.SECONDS_CUT_START                # Points to be cut (start)
     ptbc_e = C.SECONDS_CUT_END                  # Points to be cut (end)
-    pt_seg = C.SECONDS_SENSOR_SEGMENT           # Points per segment                                                    # 1 Point per secon   
+    #pt_seg = C.SECONDS_SENSOR_SEGMENT           # Points per segment                                                    # 1 Point per secon   
                               
     df_res_gps = df_res_gps[ptbc_s:len(df_res_gps)-ptbc_e] 
     df_res_gps['Time_in_s'] = df_res_gps.index.astype(np.int64) // 10**9
@@ -727,6 +727,7 @@ async def main():
     # ml_csv.to_csv(save_path_gps)
     
 path = "Z:/2020-JG18-T31Bewegungsanalyse-Pelz-Kroener/05-Messfahrten_Daten/FirebaseStorageTripData/trips/"
+#path = "C:/Users/Lukas/Desktop/SensorData/Testdaten/"
 save_path_gps = "Z:/2020-JG18-T31Bewegungsanalyse-Pelz-Kroener/06-Datenaufbereitung/processedData/ml_gps.csv"
 
 if(__name__ == "__main__"):

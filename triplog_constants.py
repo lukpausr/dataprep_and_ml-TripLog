@@ -1,7 +1,7 @@
 # =============================================================================
 # KONSTANTEN
 # =============================================================================
-VALIDATE = False
+VALIDATE = True
 
 
 SECONDS_CUT_START = 60
@@ -100,7 +100,7 @@ HYBRID_SELECTED_LABELS =    [
                             ]
 DATASET_FOLDER = SENSOR_DATA_SEGMENT_FOLDER + "dataset/"
 OFFLINE_TEST_PATH_GPS = r"C:\Users\Lukas\Desktop\1617195745679_Scooter_Electric_GPS.csv"
-
+OFFLINE_TEST_SEGMENTS = "C:/Users/Lukas/Desktop/SensorData/Testdaten/fusedSegments.csv"
 # =============================================================================
 # Start Program
 # =============================================================================

@@ -15,16 +15,41 @@ import data_import as DI
 import calculate as cal
 
 
-async def showPredictionOnMap(gps_offline_test_path):
+async def showPredictionOnMap(gps_offline_test_path, predictions, stringLabels):
     
     # df = await DI.raw_gps_interpolation(gps_offline_test_path)
     # features = cal.ml_csv(df, printReq=True) 
     df = await DI.raw_gps_interpolation(gps_offline_test_path, enableMedianFiltering=True)   
-    features = cal.ml_csv(df, printReq=True) 
+    #features = cal.ml_csv(df, printReq=True) 
+    
+    colors = ["blue", "red", "green", "orange", "purple", "yellow", "black", "grey", "brown"]
+    print("Predictions: ", predictions.size, predictions)
+    
+    
+    tooltipList = [None] * len(df['Latitude'])
+    colorList = [None] * len(df['Latitude'])
+    print("tooltipList: ", len(tooltipList), tooltipList)
+    # pt_seg = C.SECONDS_SENSOR_SEGMENT    
+    # for i in range(0, len(df)-pt_seg, int(pt_seg/2)):        
+    #     df_work_gps = pd.DataFrame()
+    #     df_work_gps = df[i:i+pt_seg]  
+    #     for j in range(0, int(pt_seg/2)):      
+    #         tooltipList.append(stringLabels[predictions[i]])
+                    
+    for i in range(0, predictions.size):
+        n = predictions[i]
+        for j in range(i*30, i*30+59):
+            print(j)
+            tooltipList[j] = stringLabels[n]
+            colorList[j] = colors[n]
+
+    print("tooltipList: ", tooltipList)
+        
+    
     
     print(df.head(20))
     
-    m = folium.Map(location=[45.5236, -122.6750])
+    m = folium.Map()
     m.fit_bounds(
         [
             [df['Latitude'].min(), df['Longitude'].min()],
@@ -35,9 +60,15 @@ async def showPredictionOnMap(gps_offline_test_path):
     locations = df[['Latitude', 'Longitude']]
     locationlist = locations.values.tolist()
     
-    #print(locations)
-    
-    folium.PolyLine(locationlist, weight=5, color='blue').add_to(m)
+    #folium.PolyLine(locationlist, tooltip=tooltipList, weight=5, color='blue').add_to(m)
+    for i in range(0, len(locationlist)):
+        folium.CircleMarker(
+            location=locationlist[i], 
+            tooltip=tooltipList[i], 
+            radius=2,
+            weight=5, 
+            color=colorList[i],
+        ).add_to(m)
     
     m.save("map.html")
 
@@ -53,14 +84,14 @@ def beautifyStringLabels(stringLabels):
         for j in range(0, len(C.CLEAN_LABELS)):
             if(C.CLEAN_LABELS[j][0] in stringLabels[i]):
                 labels.append(stringLabels[i].replace(C.CLEAN_LABELS[j][0], C.CLEAN_LABELS[j][1]))
-    print(labels)        
+    # print(labels)        
     return labels
 
 def beautifyBoxplotTitles(feature):
     for j in range(0, len(C.CLEAN_UNITS)):
         if feature in C.CLEAN_UNITS[j][0]:
             label = C.CLEAN_UNITS[j][0] + " in " + C.CLEAN_UNITS[j][1]
-    print(label)        
+    # print(label)        
     return label
 
 def boxplotByFeature(df, stringLabels, features=C.HYBRID_SELECTED_FEATURES):

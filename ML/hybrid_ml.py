@@ -131,11 +131,15 @@ def dt(X_train, Y_train, X_test, Y_test, stringLabels):
     
     vis.confusionMatrix(clf, X_test, Y_test, stringLabels)
     
+    return clf
+    
 def rf(X_train, Y_train, X_test, Y_test, stringLabels):
     clf = RandomForestClassifier()
     clf = clf.fit(X_train, Y_train)
     
     vis.confusionMatrix(clf, X_test, Y_test, stringLabels)
+    
+    return clf
 
 def svc(X_train, Y_train, X_test, Y_test, stringLabels):
     clf = SVC()
@@ -143,17 +147,23 @@ def svc(X_train, Y_train, X_test, Y_test, stringLabels):
     
     vis.confusionMatrix(clf, X_test, Y_test, stringLabels)
     
+    return clf
+    
 def knn(X_train, Y_train, X_test, Y_test, stringLabels):
     clf = KNeighborsClassifier(len(stringLabels))
     clf = clf.fit(X_train, Y_train)
     
     vis.confusionMatrix(clf, X_test, Y_test, stringLabels)
+    
+    return clf
 
 def nn(X_train, Y_train, X_test, Y_test, stringLabels):
     clf = MLPClassifier(solver='lbfgs', alpha=1e-5, hidden_layer_sizes=(30, 2), random_state=1, max_iter=10000)
     clf = clf.fit(X_train, Y_train)
     
     vis.confusionMatrix(clf, X_test, Y_test, stringLabels)
+    
+    return clf
 
 def generateDatasets():
     for i in range(0, 1):
@@ -225,7 +235,14 @@ def generateDatasets():
         )
         vis.dataDistribution(stringLabels, train_numeric)
         vis.dataDistribution(stringLabels, test_numeric)
-        
+
+def initTestDataset(path=C.OFFLINE_TEST_SEGMENTS):
+    test_segments = pd.read_csv(path) 
+    if(C.NORMALIZE_ELSE_STANDARDIZE):
+        test_segments = normalize(test_segments)
+    else:
+        test_segments = standardize(test_segments)
+    return test_segments
         
 
 def loadDataset(i):
@@ -278,17 +295,31 @@ async def main():
         print('------------------------------------------------')
         
 
-        vis.dataDistribution(stringLabels, hybrid_segment_labels_numeric)
-        vis.dataDistribution(stringLabels, Y_train)
+        # vis.dataDistribution(stringLabels, hybrid_segment_labels_numeric)
+        # vis.dataDistribution(stringLabels, Y_train)
         
-        vis.boxplotByFeature(hybrid_segments, stringLabels)
-        await vis.showPredictionOnMap(C.OFFLINE_TEST_PATH_GPS)
+        # vis.boxplotByFeature(hybrid_segments, stringLabels)
+        
         # Machine Learning
-        dt(X_train, Y_train, X_test, Y_test, stringLabels)
-        rf(X_train, Y_train, X_test, Y_test, stringLabels)
-        svc(X_train, Y_train, X_test, Y_test, stringLabels)
-        knn(X_train, Y_train, X_test, Y_test, stringLabels)
-        nn(X_train, Y_train, X_test, Y_test, stringLabels)
+        # dt_clf = dt(X_train, Y_train, X_test, Y_test, stringLabels)
+        # rf_clf = rf(X_train, Y_train, X_test, Y_test, stringLabels)
+        svc_clf = svc(X_train, Y_train, X_test, Y_test, stringLabels)
+        # knn_clf = knn(X_train, Y_train, X_test, Y_test, stringLabels)
+        # nn_clf = nn(X_train, Y_train, X_test, Y_test, stringLabels)
+        
+        
+        
+        
+        offlineTestDf = initTestDataset()
+        offlineTestDf = np.array(offlineTestDf[C.HYBRID_SELECTED_FEATURES])
+        
+        predictions = svc_clf.predict(offlineTestDf)
+        
+        await vis.showPredictionOnMap(
+            C.OFFLINE_TEST_PATH_GPS, 
+            predictions, 
+            stringLabels
+        )
         
         # clf = RandomForestClassifier()
         # sfs1 = SFS(     
