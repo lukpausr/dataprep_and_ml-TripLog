@@ -71,6 +71,18 @@ def removeUntilEqual(df, hybrid_segment_labels_numeric):
     df = df.groupby('numeric').apply(lambda s: s.sample(min_number_of_elements))
     return df
 
+def copyUntilEqual(df, hybrid_segment_labels_numeric):
+    df['numeric'] = hybrid_segment_labels_numeric
+    count = df['numeric'].value_counts()
+    max_number_of_elements = count.max()
+    
+    lst = [df]
+    for class_index, group in df.groupby('numeric'):
+        lst.append(group.sample(max_number_of_elements-len(group), replace=True))
+    frame_new = pd.concat(lst)
+
+    return frame_new
+
 def custom_train_test_split(df, hybrid_segment_labels_numeric):
     occurances = df['Sublabel'].value_counts()
     
@@ -107,20 +119,39 @@ def removeBySublabel(df, labeltype):
     )
     return df
 
-def standardize(df):
+def standardize(df, mean=None, std=None):
+    if mean is None or std is None:
+        mean = df[C.HYBRID_SELECTED_FEATURES].mean()
+        std = df[C.HYBRID_SELECTED_FEATURES].std()
+        
     df[C.HYBRID_SELECTED_FEATURES] = (
-        (df[C.HYBRID_SELECTED_FEATURES] - 
-         df[C.HYBRID_SELECTED_FEATURES].mean()) /
-         df[C.HYBRID_SELECTED_FEATURES].std()
+        (df[C.HYBRID_SELECTED_FEATURES] - mean) / std
     )
     return df
+
+def getStandardizationAndNormalizationValues(df):
+    # print("***STANDARDIZATION***")
+    # print("MEAN:\n",df[C.HYBRID_SELECTED_FEATURES].mean())
+    # print("STD:\n",df[C.HYBRID_SELECTED_FEATURES].std())
     
-def normalize(df):
+    # print("***NORMALIZATION***")
+    # print("MIN:\n",df[C.HYBRID_SELECTED_FEATURES].min())
+    # print("MAX:\n",df[C.HYBRID_SELECTED_FEATURES].max())
+    
+    return (
+        df[C.HYBRID_SELECTED_FEATURES].min(), 
+        df[C.HYBRID_SELECTED_FEATURES].max(), 
+        df[C.HYBRID_SELECTED_FEATURES].mean(),
+        df[C.HYBRID_SELECTED_FEATURES].std()
+    )
+
+def normalize(df, minima=None, maxima=None):
+    if minima is None or maxima is None:
+        minima=df[C.HYBRID_SELECTED_FEATURES].min()
+        maxima=df[C.HYBRID_SELECTED_FEATURES].max()
+    
     df[C.HYBRID_SELECTED_FEATURES] = (
-        (df[C.HYBRID_SELECTED_FEATURES] -
-         df[C.HYBRID_SELECTED_FEATURES].min()) /
-        (df[C.HYBRID_SELECTED_FEATURES].max() -
-         df[C.HYBRID_SELECTED_FEATURES].min())
+        (df[C.HYBRID_SELECTED_FEATURES] - minima) / (maxima - minima)
     )
     return df
 
@@ -134,7 +165,11 @@ def dt(X_train, Y_train, X_test, Y_test, stringLabels):
     return clf
     
 def rf(X_train, Y_train, X_test, Y_test, stringLabels):
-    clf = RandomForestClassifier()
+    clf = RandomForestClassifier(
+        n_estimators = 200, 
+        criterion = 'entropy',
+        n_jobs = -1
+    )
     clf = clf.fit(X_train, Y_train)
     
     vis.confusionMatrix(clf, X_test, Y_test, stringLabels)
@@ -142,7 +177,11 @@ def rf(X_train, Y_train, X_test, Y_test, stringLabels):
     return clf
 
 def svc(X_train, Y_train, X_test, Y_test, stringLabels):
-    clf = SVC()
+    clf = SVC(
+        degree = 5,
+        kernel = 'sigmoid',
+        
+    )
     clf = clf.fit(X_train, Y_train)
     
     vis.confusionMatrix(clf, X_test, Y_test, stringLabels)
@@ -158,10 +197,19 @@ def knn(X_train, Y_train, X_test, Y_test, stringLabels):
     return clf
 
 def nn(X_train, Y_train, X_test, Y_test, stringLabels):
-    clf = MLPClassifier(solver='lbfgs', alpha=1e-5, hidden_layer_sizes=(30, 2), random_state=1, max_iter=10000)
+    clf = MLPClassifier(
+        solver='lbfgs', 
+        alpha=1e-5, 
+        learning_rate = 'adaptive',
+        hidden_layer_sizes=(40, 6), 
+        #random_state=1, 
+        max_iter=50000,
+        validation_fraction = 0.3
+    )
     clf = clf.fit(X_train, Y_train)
     
     vis.confusionMatrix(clf, X_test, Y_test, stringLabels)
+    vis.confusionMatrix(clf, X_train, Y_train, stringLabels)
     
     return clf
 
@@ -192,6 +240,8 @@ def generateDatasets():
             stringLabels
         )        
         
+        hybrid_segments = copyUntilEqual(hybrid_segments, hybrid_segment_labels_numeric)
+        hybrid_segments = hybrid_segments.sample(frac=1).reset_index(drop=True)
         
         # Normalize or Standardize
         if(C.NORMALIZE_ELSE_STANDARDIZE):
@@ -199,14 +249,18 @@ def generateDatasets():
         else:
             hybrid_segments = standardize(hybrid_segments)
             
+        
+        
+        
         original = hybrid_segments    
             
         # number_of_elements = countLabels(hybrid_segment_labels_numeric, stringLabels)
-        hybrid_segments = removeUntilEqual(hybrid_segments, hybrid_segment_labels_numeric)
+        # hybrid_segments = removeUntilEqual(hybrid_segments, hybrid_segments['numeric'])
         
-        hybrid_segments = hybrid_segments.sample(frac=1).reset_index(drop=True)
+        # hybrid_segments = hybrid_segments.sample(frac=1).reset_index(drop=True)
                     
-        vis.dataDistribution(stringLabels, hybrid_segment_labels_numeric)
+        
+        # vis.dataDistribution(stringLabels, hybrid_segments['numeric'])
         
         
         hybrid_segment_labels_numeric = convertLabeltoInt(
@@ -216,7 +270,8 @@ def generateDatasets():
         # Split file into Train- and Test-Data
         #train, test = custom_train_test_split(hybrid_segments, hybrid_segment_labels_numeric)
         
-        train, test = train_test_split(hybrid_segments, test_size=0.5)
+        train, test = train_test_split(hybrid_segments, test_size=0.2)
+        test = test[~test.isin(train)].dropna()
         original = original[~original.isin(test)].dropna()
         print("Trainings- und Testdatenset:", len(original), len(test))
         print('------------------------------------------------')
@@ -236,15 +291,14 @@ def generateDatasets():
         vis.dataDistribution(stringLabels, train_numeric)
         vis.dataDistribution(stringLabels, test_numeric)
 
-def initTestDataset(path=C.OFFLINE_TEST_SEGMENTS):
+def initTestDataset(minima, maxima, mean, std, path=C.OFFLINE_TEST_SEGMENTS):
     test_segments = pd.read_csv(path) 
     if(C.NORMALIZE_ELSE_STANDARDIZE):
-        test_segments = normalize(test_segments)
+        test_segments = normalize(test_segments, minima, maxima)
     else:
-        test_segments = standardize(test_segments)
+        test_segments = standardize(test_segments, mean, std)
     return test_segments
         
-
 def loadDataset(i):
     train = pd.read_csv(C.DATASET_FOLDER + "train_" + str(i) + ".csv")
     test = pd.read_csv(C.DATASET_FOLDER + "test_" + str(i) + ".csv")    
@@ -266,7 +320,9 @@ async def main():
         stringLabels
     )
     hybrid_segments["numeric"] = hybrid_segment_labels_numeric
+    copyUntilEqual(hybrid_segments, hybrid_segment_labels_numeric)
     
+    minima, maxima, mean, std = getStandardizationAndNormalizationValues(hybrid_segments)
     
     
     if(C.GENERATE_ELSE_LOAD_DATA):
@@ -301,20 +357,20 @@ async def main():
         # vis.boxplotByFeature(hybrid_segments, stringLabels)
         
         # Machine Learning
-        # dt_clf = dt(X_train, Y_train, X_test, Y_test, stringLabels)
-        # rf_clf = rf(X_train, Y_train, X_test, Y_test, stringLabels)
-        svc_clf = svc(X_train, Y_train, X_test, Y_test, stringLabels)
+        dt_clf = dt(X_train, Y_train, X_test, Y_test, stringLabels)
+        rf_clf = rf(X_train, Y_train, X_test, Y_test, stringLabels)
+        # svc_clf = svc(X_train, Y_train, X_test, Y_test, stringLabels)
         # knn_clf = knn(X_train, Y_train, X_test, Y_test, stringLabels)
-        # nn_clf = nn(X_train, Y_train, X_test, Y_test, stringLabels)
+        nn_clf = nn(X_train, Y_train, X_test, Y_test, stringLabels)
         
         
         
         
-        offlineTestDf = initTestDataset()
+        offlineTestDf = initTestDataset(minima, maxima, mean, std)
         offlineTestDf = np.array(offlineTestDf[C.HYBRID_SELECTED_FEATURES])
         
-        predictions = svc_clf.predict(offlineTestDf)
         
+        predictions = nn_clf.predict(offlineTestDf)        
         await vis.showPredictionOnMap(
             C.OFFLINE_TEST_PATH_GPS, 
             predictions, 
