@@ -9,6 +9,9 @@ import triplog_constants as C
 #import ML.visualisation_ml as vis
 import FeatureExtraction.calculate_sensor as calcSensor
 
+dbinfrastructure = pd.read_excel (r"B:\Privat\Studium\Studienarbeit\DB_Infrastructure.xlsx")
+dbInfrastructure = list(dbinfrastructure.itertuples(index=False, name=None))
+
 pd.set_option('display.max_columns', None)  # or 1000
 pd.set_option('display.max_rows', None)  # or 1000
 pd.set_option('display.max_colwidth', None)  # or 199
@@ -59,7 +62,8 @@ class SensorDatapoint:
 class GpsDatapoint:
     def __init__(self, avgSpeed, maxSpeed, minAcc, 
                  maxAcc, tow, towAvgSpeed, stdSpeed, varSpeed, 
-                 stdAcc, varAcc, label, sublabel, subsublabel):
+                 stdAcc, varAcc, meanNearestInfrastructure,
+                 label, sublabel, subsublabel):
         self.avgSpeed = avgSpeed
         self.maxSpeed = maxSpeed
         self.minAcc = minAcc
@@ -70,6 +74,7 @@ class GpsDatapoint:
         self.varSpeed = varSpeed
         self.stdAcc = stdAcc
         self.varAcc = varAcc
+        self.meanNearestInfrastructure = meanNearestInfrastructure
         self.label = label
         self.sublabel = sublabel
         self.subsublabel = subsublabel
@@ -238,7 +243,13 @@ async def preperate_gps(record):
         
         label = record.label
         sublabel = record.sublabel
-        subsublabel = record.subsublabel            
+        subsublabel = record.subsublabel     
+             
+        dbPoints = []
+        for p in dbInfrastructure:
+            if(p[0] < (df_res_gps['Latitude'].max() + 0.5) and p[0] > (df_res_gps['Latitude'].min() - 0.5)):
+                if(p[1] < (df_res_gps['Longitude'].max() + 0.5) and p[1] > (df_res_gps['Longitude'].min() - 0.5)):
+                    dbPoints.append(p)
         
         for i in range(0, len(df_res_gps)-pt_seg, int(pt_seg/2)):
             
@@ -246,6 +257,7 @@ async def preperate_gps(record):
             df_work_gps = df_res_gps[i:i+pt_seg]
             
             data = calculate.ml_csv(df_work_gps)
+            meanNearestInfrastructure = calculate.meanNearestInfrastructure(df_work_gps, dbPoints)
 
             obj = GpsDatapoint(
                 data['Average speed'].iloc[0],
@@ -258,6 +270,7 @@ async def preperate_gps(record):
                 data['VARSPEED'].iloc[0],
                 data['STDACC'].iloc[0],
                 data['VARACC'].iloc[0],
+                meanNearestInfrastructure,
                 label, sublabel, subsublabel
             )     
             record.splitted_gps.append(obj)        
@@ -579,6 +592,7 @@ async def writeFusedSegmentCSV(records):
                                'stdSpeed', 'varSpeed', 'stdAcc', 'varAcc',
                                'maxFreqACC', 'maxFreqGYRO', 'maxSingleFreqACC', 'maxSingleFreqGYRO',
                                'sensor_stdAcc', 'sensor_varAcc', 'sensor_stdGyro', 'sensor_varGyro',
+                               'meanNearestInfrastructure',
                                'folder', 'Label', 'Sublabel', 'Subsublabel'])
     
     for record in records:
@@ -605,6 +619,7 @@ async def writeFusedSegmentCSV(records):
                 segment_sensor.varAcc[0],
                 segment_sensor.stdGyro[0],
                 segment_sensor.varGyro[0],
+                segment_gps.meanNearestInfrastructure,
                 record.folder,
                 segment_gps.label, 
                 segment_gps.sublabel, 
@@ -734,6 +749,8 @@ if(__name__ == "__main__"):
     import nest_asyncio
     nest_asyncio.apply()  
     asyncio.run(main())
+    
+
     
     
     
