@@ -2,6 +2,7 @@ import pandas as pd
 import numpy as np
 #from gpx_csv_converter import Converter
 from math import sin, cos, sqrt, atan2, radians
+from scipy.spatial import distance as dis
 
 import matplotlib.pyplot as plt
 
@@ -223,10 +224,32 @@ def calculate_data(times_total, times_diff, distances_total, distances_diff, spe
             textsize = 10.0,
             flavor = "latex"
         )
-        
-    
-    
+
     return(data)
+
+def meanNearestInfrastructure(df, dbInfrastructure):  
+    points = pd.DataFrame()
+    points['Latitude'] = df['Latitude'] 
+    points['Longitude'] = df['Longitude']
+    allPoints = list(points.itertuples(index=False, name=None))
+    
+    # tl_point = ((df['Latitude'].max + 0.5), (df['Longitude'].min - 0.5))
+    # tr_point = ((df['Latitude'].max + 0.5), (df['Longitude'].max + 0.5))
+    # bl_point = ((df['Latitude'].min - 0.5), (df['Longitude'].min - 0.5))
+    # br_point = ((df['Latitude'].min - 0.5), (df['Longitude'].max + 0.5))  
+        
+    distance = 0.0
+    for point in allPoints:
+        node = closest_node(point, dbInfrastructure)
+        distance = distance + calc_distance(point[0], point[1], node[0], node[1])
+ 
+    distance = distance / len(allPoints)
+    return distance
+
+# https://codereview.stackexchange.com/questions/28207/finding-the-closest-point-to-a-list-of-points
+def closest_node(node, nodes):
+    closest_index = dis.cdist([node], nodes).argmin()
+    return nodes[closest_index]
 
 def ml_csv(df, printReq=False):
     """
