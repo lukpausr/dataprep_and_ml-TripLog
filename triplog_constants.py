@@ -66,13 +66,14 @@ CLEAN_UNITS =   [
                     ['sensor_stdAcc',       '$Hz$'            ], 
                     ['sensor_varAcc',       '$Hz^2$'          ], 
                     ['sensor_stdGyro',      '$Hz$'            ], 
-                    ['sensor_varGyro',      '$Hz^2$'          ]
+                    ['sensor_varGyro',      '$Hz^2$'          ],
+                    ['meanNearestInfrastructure', '$m$'     ]
                 ]
 # =============================================================================
 # Hybrid Machine Learning
 # =============================================================================
 NORMALIZE_ELSE_STANDARDIZE = True
-COMPRESS_LABELS = False
+COMPRESS_LABELS = True
 GENERATE_ELSE_LOAD_DATA = False
 HYBRID_SELECTED_FEATURES = [
                                 'avgSpeed', 
@@ -92,7 +93,8 @@ HYBRID_SELECTED_FEATURES = [
                                 'sensor_stdAcc', 
                                 'sensor_varAcc', 
                                 'sensor_stdGyro', 
-                                'sensor_varGyro'
+                                'sensor_varGyro',
+                                'meanNearestInfrastructure'
                             ]
 HYBRID_SELECTED_LABELS =    [
                                 'Label', 
