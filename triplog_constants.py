@@ -21,7 +21,7 @@ WRITE_SENSOR_DATA_TO_FILE = False
 
 # Define the folder in which the initially generated training data is being
 # saved in with SENSOR_DATA_SEGMENT_FOLDER
-SENSOR_DATA_SEGMENT_FOLDER = "C:/Users/***/Desktop/SensorData/"
+SENSOR_DATA_SEGMENT_FOLDER = "C:/Users/***/***/SensorData/"
 
 # Define the file names of the initially generated training data
 SENSOR_DATA_CSV = SENSOR_DATA_SEGMENT_FOLDER + "sensorSegments.csv"
@@ -199,9 +199,9 @@ HYBRID_SELECTED_LABELS =    [
 DATASET_FOLDER = SENSOR_DATA_SEGMENT_FOLDER + "dataset/"
 
 # Define location of the raw reference track file
-OFFLINE_TEST_PATH_GPS = r"C:\Users\***\Desktop\1617195745679_Scooter_Electric_GPS.csv"
+OFFLINE_TEST_PATH_GPS = r"***:\Users\***\1617195745679_Scooter_Electric_GPS.csv"
 
 # Define location of the segmented and feature calculated reference track file
 # This data needs to created by using data_import.py to calculate features
 # once and can then be used to make predictions
-OFFLINE_TEST_SEGMENTS = "C:/Users/***/Desktop/SensorData/Testdaten/fusedSegments.csv"
+OFFLINE_TEST_SEGMENTS = "***:/Users/***/SensorData/Testdaten/fusedSegments.csv"
