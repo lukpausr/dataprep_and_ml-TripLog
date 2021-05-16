@@ -16,8 +16,8 @@ import pandas as pd
 ###############################################################################
 parser = ET.XMLParser(encoding="utf-8")
 tree = ET.parse(
-    #"Z:/2020-JG18-T31Bewegungsanalyse-Pelz-Kroener/06-Datenaufbereitung/DB-Netz_INSPIRE_20200217.xml",
-    "B:\Downloads\DB_Inspire_XML_2019\DB-Netz_INSPIRE_20200217.xml",
+    #"***:/***/06-Datenaufbereitung/DB-Netz_INSPIRE_20200217.xml",
+    "***:\***\DB_Inspire_XML_2019\DB-Netz_INSPIRE_20200217.xml",
     parser=parser)
 
 root = tree.getroot()

@@ -227,7 +227,7 @@ def calculate_data(times_total, times_diff, distances_total, distances_diff, spe
         plt.legend(loc="upper left")
         
         tikzplotlib.save(
-            "C:/Users/Lukas/Desktop/Studienarbeit/T3200/images/plots/" + str(time.time_ns()) + ".tex",
+            "***:/***/T3200/images/plots/" + str(time.time_ns()) + ".tex",
             axis_width = "18cm",
             axis_height = "10cm",
             textsize = 10.0,
@@ -301,7 +301,7 @@ def ml_csv(df, printReq=False):
     return(data)
 
 if __name__ == "__MAIN__":
-    path = r"C:\Studium\5.Semester\Studienarbeit\1608195983032_Car_Electric.csv"
+    path = r"***:\***\1608195983032_Car_Electric.csv"
     csv = pd.read_csv(path, sep = ",")    
     times_total, times_diff, distances_total, distances_diff = get_data(csv) 
     calculate_data(times_total, times_diff, distances_total, distances_diff)

@@ -925,9 +925,9 @@ async def main():
     # ml_csv = data_import(path)
     # ml_csv.to_csv(save_path_gps)
     
-path = "Z:/***/05-Messfahrten_Daten/FirebaseStorageTripData/trips/"
-#path = "C:/***/***/***/SensorData/Testdaten/"
-save_path_gps = "Z:/***/06-Datenaufbereitung/processedData/ml_gps.csv"
+path = "***:/***/05-Messfahrten_Daten/FirebaseStorageTripData/trips/"
+#path = "***:/***/SensorData/Testdaten/"
+save_path_gps = "***:/***/06-Datenaufbereitung/processedData/ml_gps.csv"
 
 if(__name__ == "__main__"):
     # to make asyncio work in Anaconda:

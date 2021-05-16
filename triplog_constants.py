@@ -200,7 +200,7 @@ DATASET_FOLDER = SENSOR_DATA_SEGMENT_FOLDER + "dataset/"
 
 # Define location of the raw reference track file
 OFFLINE_TEST_PATH_GPS = r"***:\Users\***\1617195745679_Scooter_Electric_GPS.csv"
-s
+
 # Define location of the segmented and feature calculated reference track file
 # This data needs to created by using data_import.py to calculate features
 # once and can then be used to make predictions
