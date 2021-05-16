@@ -2,7 +2,6 @@
 The following explanation of the scripts is given in german language only.
 
 ## Anleitung
-
 ### Datenvorverarbeitung
 #### Herunterladen der Daten - data_grabber.py
 Mit dem Script "data_grabber.py" können die auf der Google Firebase gesammelten Daten gedownloaded werden. 
@@ -87,7 +86,102 @@ Die vorverarbeiteten Daten werden in einem in "triplog_constants.py" festgelegte
 # saved in with SENSOR_DATA_SEGMENT_FOLDER
 SENSOR_DATA_SEGMENT_FOLDER = "C:/Users/***/***/SensorData/"
 ```
+Die erstellten Daten werden unter den Bezeichnungen "sensorSegments.csv", "gpsSegments.csv" und "fusedSegments.csv" gespeichert und müssen nachträglich manuell getrennt werden. Die Ordnerstruktur, die für das Machine Learning benötigt, wird zu einem späteren Zeitpunkt in dieser Anleitung erläutert. Zurzeit beinhaltet nur die Datei "fusedSegments.csv" nutzbare Daten. In den anderen Dateien werden (da Sie nicht benötigt werden) nicht alle dem jeweiligen Sensor zuzuordnenden Features abgelegt. Das Script "data_import.py" müsste dazu zunächst ergänzt werden.
 
 ##### Dauer des Scripts
 Die Ausführung des Script benötigt je nach Datenmenge mehrere Stunden (zuletzt 12-14 Stunden). Die Ausführung benötigt aufgrund der Berechnung des Features mit der DB Infrastruktur so lange.
 
+### Machine Learning
+#### Machine Learning (Erstellung von Trainings- und Testdatensets) - hybrid_ml.py
+Damit das Machine Learning Skript "hybrid_ml.py" zur Erstellung von Trainings- und Testdaten genutzt werden kann, müssen folgende Einstellungen in der Datei "triplog_constants.py" getroffen werden:
+```python
+# =============================================================================
+# Hybrid Machine Learning - hybrid_ml.py
+# =============================================================================
+
+# Define if data should be normalized or standardized. Data needs to be
+# regenerated if this value is changed
+NORMALIZE_ELSE_STANDARDIZE = True
+
+# Define if data should be (re)generated or loaded. At regeneration, no machine
+# learning model training will take place. When set to False, models will be
+# trained and evaluated
+GENERATE_ELSE_LOAD_DATA = True
+
+# Define in which folder the generated train- and testdata is being saved
+DATASET_FOLDER = SENSOR_DATA_SEGMENT_FOLDER + "dataset/"
+```
+Der Pfad DATASET_FOLDER bestimmt, wo die erstellten Trainings- und Testdatensets gespeichert werden. Sie werden beim Trainieren der Machine Learning Modelle automatisch wieder eingelesen.
+Die Normalisierung oder Standardisierung findet bereits bei der Erstellung der Datensets statt und muss deshalb schon an dieser Stelle erfolgen.
+
+#### Machine Learning (Modelltraining und Evaluation ) - hybrid_ml.py
+Für das Trainieren der verschiedenen Machine Learning Modelle und der Evaluation dieser (+ Referenzstreckenvisualisierung) müssen im Script "triplog_constants.py" folgende Einstellungen getätigt werden:
+```python
+# =============================================================================
+# Hybrid Machine Learning - hybrid_ml.py
+# =============================================================================
+
+# Define if data should be normalized or standardized. Data needs to be
+# regenerated if this value is changed
+NORMALIZE_ELSE_STANDARDIZE = True
+
+# Define if models should be trained with compressed labels or with
+# uncompressed labels. Data DOESNT need to be regenerated if this value is
+# changed
+COMPRESS_LABELS = False
+
+# Define if data should be (re)generated or loaded. At regeneration, no machine
+# learning model training will take place. When set to False, models will be
+# trained and evaluated
+GENERATE_ELSE_LOAD_DATA = False
+
+# Defines which features will be used for the training of the machine learning
+# models
+HYBRID_SELECTED_FEATURES = [
+                                'avgSpeed', 
+                                'maxSpeed', 
+                                'minAcc', 
+                                'maxAcc', 
+                                'tow', 
+                                'towAvgSpeed', 
+                                'maxFreqACC',
+                                'maxFreqGYRO',
+                                'maxSingleFreqACC',
+                                'maxSingleFreqGYRO',
+                                'stdSpeed', 
+                                'varSpeed', 
+                                'stdAcc', 
+                                'varAcc',
+                                'sensor_stdAcc', 
+                                'sensor_varAcc', 
+                                'sensor_stdGyro', 
+                                'sensor_varGyro',
+                                'meanNearestInfrastructure'
+                            ]
+
+# Defines which depth of labels should be used to generate models, please use
+# COMPRESS_LABELS to achieve reduced label training of models
+HYBRID_SELECTED_LABELS =    [
+                                'Label', 
+                                'Sublabel', 
+                            ]
+
+# Define in which folder the generated train- and testdata is being saved
+DATASET_FOLDER = SENSOR_DATA_SEGMENT_FOLDER + "dataset/"
+
+# Define location of the raw reference track file
+OFFLINE_TEST_PATH_GPS = r"C:\Users\***\1617195745679_Scooter_Electric_GPS.csv"
+
+# Define location of the segmented and feature calculated reference track file
+# This data needs to created by using data_import.py to calculate features
+# once and can then be used to make predictions
+OFFLINE_TEST_SEGMENTS = "C:/Users/***/SensorData/Testdaten/fusedSegments.csv"
+```
+Die Standardisierung / Normalisierung muss dabei diesselbe sein, wie beim Erstellen der Datensets, da diese Einstellung Einfluss auf das Einlesen der Referenstrecke und deren Vorhersagen hat. Mit COMPRESS_LABELS kann entschieden werden, welche Labeltiefe beim Trainieren der Modelle verwendet wird. GENERATE_ELSE_LOAD_DATA muss auf False eingestellt sein, da sonst kein Machine Learning stattfinden wird. In HYBRID_SELECTED_FEATURES kann definiert werden (durch auskommentieren), welche Features für das Training benutzt werden. In OFFLINE_TEST_PATH_GPS wird der Quell-GPS-Pfad der Referenzstrecke hinterlegt, in OFFLINE_TEST_SEGMENTS wird das Dokument "fusedSegments.csv" mit den vorverarbeitenden Daten der Referenzstrecke hinterlegt. Diese Daten müssen zuvor mit "data_import.py" erstellt und gesondert abgespeichert werden.
+
+#### Weitere Optionen
+Weitere Optionen, Visualisierungen etc. können durch aus- und einkommentieren von relevanten Codeschnipseln im Quellcode aktiviert oder deaktiviert werden. Hierbei kann gerne experimentiert werden, die Laufzeit beim Trainieren der Modelle hält sich in Grenzen (wenige Minuten, wenn überhaupt).
+Zum jetztigen Zeitpunkt werden die erstellten Modelle nicht lokal gespeichert sondern bei jedem Durchlauf erneut trainiert.
+
+### Erstellte Trainings- und Testdatensets sowie Referenzstrecken
+Bereits erstellte Trainings- und Testdatensets finden sich auf der Nextcloud (08-Datensets_fuer_Machine_Learning). Diese können für den Machine Learning Prozess lokal gespeichert und anschließend verwendet werden. Hierdurch entfällt die Zeitintensive Datenvorverarbeitung mit "data_import.py"
