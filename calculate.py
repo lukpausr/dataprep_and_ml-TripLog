@@ -1,6 +1,5 @@
 import pandas as pd
 import numpy as np
-#from gpx_csv_converter import Converter
 from math import sin, cos, sqrt, atan2, radians
 from scipy.spatial import distance as dis
 
@@ -10,27 +9,19 @@ import visualize as v
 import tikzplotlib
 import triplog_constants as C
 
-# Funktion um Distanz (m) zw. zwei GPS-Punkten zu bestimmen
+# =============================================================================
+# calc_distance
+# calculate the distance between two given gps-points
+#
+# Parameter:
+#   lat1, lon1 - gps coordinates of the first point
+#   lat2, lon2 - gps coordinates of the second point
+#
+# Returns:
+#   distance - returns the distance in meters
+# =============================================================================   
 def calc_distance(lat1, lon1, lat2, lon2):
-    """
-    Berechnet die Distanz zwischen zwei GPS Punkten in m.
-    
-    Parameters
-    ----------
-    lat1 : Numpy.Float
-        Breitengrad von GPS-Punkt 1.
-    lon1 : Numpy.Float
-        Längengrad von GPS-Punkt 1.
-    lat2 : Numpy.Float
-        Breitengrad von GPS-Punkt 2.
-    lon2 : Numpy.Float
-        Längengrad von GPS-Punkt 2.
 
-    Returns
-    -------
-    Distanz in m.
-
-    """
     lat1 = radians(lat1)
     lon1 = radians(lon1)
     lat2 = radians(lat2)
@@ -38,42 +29,44 @@ def calc_distance(lat1, lon1, lat2, lon2):
 
     dlon = lon2 - lon1
     dlat = lat2 - lat1
-
-    # Haversine Formula
+    
+    ###########################################################################
+    ### Using Haversine Formula
+    ###########################################################################
     a = sin(dlat / 2)**2 + cos(lat1) * cos(lat2) * sin(dlon / 2)**2
     c = 2 * atan2(sqrt(a), sqrt(1 - a))
 
-    # Abschätzung der Strecke auf Basis des Erdradius in km
+    ###########################################################################
+    ### Estimation of the distance based on the earth radius in km
+    ###########################################################################
     R = 6373.0
     distance = R * c
-    distance = 1000*distance
+    distance = 1000 * distance
 
-    # Return Meter
     return(distance)
 
+# =============================================================================
+# get_data
+# basic data for features is being calculated/collected out of dataframe
+#
+# Parameter:
+#   cvs - dataframe of a csv-file
+#
+# Returns:
+#   times_total - list of total times
+#   times_diff - list of times differences
+#   distances_total - list of total distance
+#   distances_diff - list of distance differences
+#   speedGoogle - list of speeds calculated by google
+# =============================================================================  
 def get_data(csv):
-    """
-    Aus der übergebenen csv-Datei werden die relevanten Werte (Zeiten, Distanzen)
-    entnommen und in Listen gespeichert.
 
-    Parameters
-    ----------
-    csv : Pandas DataFrame
-        DataFrame einer csv-Datei.
-
-    Returns
-    -------
-    list[float]: Liste mit den Zeiten (total)
-    List[float]: Liste mit den Zeitdifferenzen
-    List[float]: Liste mit der Gesamtstrecke
-    List[float]: Liste mit den Streckendifferenzen        
-
-    """
-    # Startzeitpunkt ermitteln
+    #######################################################################
+    ### Creating time lists
+    #######################################################################
     time_in_s = csv["Time_in_s"]
     begin = time_in_s[0]
 
-    # Zeitpunkte in Listen speichern
     times_total = [0]
     times_diff = [0]        
        
@@ -81,12 +74,12 @@ def get_data(csv):
         times_total.append(time_in_s[i] - begin)
         times_diff.append(time_in_s[i]-time_in_s[i-1])
 
-    # Distanzen
+    #######################################################################
+    ### Creating distance lists
+    #######################################################################
     lats = csv["Latitude"]
     lons = csv["Longitude"]
     
-    # print(type(lats[0]))
-    # Distanzen in Listen speichern
     distances_total = [0]
     distances_diff = [0]
 
@@ -96,48 +89,45 @@ def get_data(csv):
         total = total + dist
         distances_total.append(total)
         distances_diff.append(dist)
-    # Zeiten in Sekunden
-    
+
+    #######################################################################
+    ### Creating google speed list
+    #######################################################################
     speedGoogle = list(csv["Speed"].values)
     
     return(times_total, times_diff, distances_total, distances_diff, speedGoogle)
 
+# =============================================================================
+# calculate_data
+# calculate gps features
+#
+# Parameter:
+#   times_total - list of total times
+#   times_diff - list of times differences
+#   distances_total - list of total distance
+#   distances_diff - list of distance differences
+#   speedGoogle - list of speeds calculated by google
+#
+# Returns:
+#   data - DataFrame with all features made of gps data
+# =============================================================================  
 def calculate_data(times_total, times_diff, distances_total, distances_diff, speedGoogle, printReq=False):
-    """
-    Berechnet aus den Daten von get_data() die Features der GPS-Daten.
 
-    Parameters
-    ----------
-    times_total : List[float]
-    times_diff : List[float]
-    distances_total : List[float]
-    distances_diff : List[float]
-    
-    Returns
-    -------
-    DataFrame mit den ml-Features der GPS-Daten.
-
-    """
-    #Berechnen der Geschwindigkeiten
+    ###########################################################################
+    ### Calculate speed features
+    ###########################################################################
     if C.USE_GOOGLE_SPEEDS is True:
         velocities = speedGoogle
     else:
         velocities = [0]
-        #in km/h
         for i in range(1, len(distances_diff)):
             velocities.append(distances_diff[i]/(times_diff[i]))
 
-    #Berechnen der Beschleunigungen
-    accelerations = [0]
-    #in m/s^2
-    for i in range(1, len(velocities)):
-        accelerations.append( (velocities[i] - velocities[i-1]) / (times_diff[i]))
-
-    #Durchschnitt- und Maximalgeschwindigkeit
+    # average and maximum speed
     max_velocity = max(velocities)
     avg_velocity = sum(velocities)/len(velocities)
 
-    #Durchschnittsgeschwindigkeit ohne Geschwindigkeiten < 2km/h (Wartezeiten)
+    # Average speed without speeds < 2km/h (waiting times)
     times_wo_waiting = []
     velocities_wo_waiting = []
     for i in range(len(velocities)):
@@ -155,27 +145,38 @@ def calculate_data(times_total, times_diff, distances_total, distances_diff, spe
     if avg_velocity_wo_waiting == None: 
         avg_velocity_wo_waiting = 0
         
-    #Wartezeiten
+    ###########################################################################
+    ### Calculate acceleration features
+    ###########################################################################
+    accelerations = [0]
+    #in m/s^2
+    for i in range(1, len(velocities)):
+        accelerations.append( (velocities[i] - velocities[i-1]) / (times_diff[i]))       
+    
+    # Maximum and minimum acceleration
+    max_acceleration = max(accelerations)
+    min_acceleration = min(accelerations)        
+        
+    ###########################################################################
+    ### Calculate waiting times
+    ###########################################################################
     waiting_duration = times_total[-1] - sum(times_wo_waiting)
 
-    #Maximal- und Minimalbeschleunigung
-    max_acceleration = max(accelerations)
-    min_acceleration = min(accelerations)
- 
-    #Dauer
+    # Duration
     duration = times_total[-1]
 
-    #Entfernung
+    # Distance
     distance = distances_total[-1]
     
-    #Standardabweichung und Varianz
+    # Standard deviation and variance
     stdSpeed = np.std(velocities, dtype=np.float64)
     varSpeed = np.var(velocities, dtype=np.float64)
     stdAcc = np.std(accelerations, dtype=np.float64)
     varAcc = np.var(accelerations, dtype=np.float64)
     
-    #Daten zusammenfassen
-    #dauer einer Beschleunigung, bremsweg
+    ###########################################################################
+    ### Create DataFrame
+    ###########################################################################
     data = [avg_velocity, max_velocity, min_acceleration, max_acceleration, 
             duration, distance, waiting_duration, avg_velocity_wo_waiting,
             stdSpeed, varSpeed, stdAcc, varAcc]
@@ -196,8 +197,16 @@ def calculate_data(times_total, times_diff, distances_total, distances_diff, spe
         ]
     )
     
+    ###########################################################################
+    ### if printReq(required) is set true: 
+    ### print comparison between gps calculated speeds, median filtered 
+    ### speeds and google speeds (as latex pgf/tikz)
+    ###########################################################################
     if printReq is True:
         import time
+        velocities = [0]
+        for i in range(1, len(distances_diff)):
+            velocities.append(distances_diff[i]/(times_diff[i]))
         # Test for median filtering
         #from pandas.core.window import Rolling
         #threshold = 3
@@ -220,24 +229,39 @@ def calculate_data(times_total, times_diff, distances_total, distances_diff, spe
         tikzplotlib.save(
             "C:/Users/Lukas/Desktop/Studienarbeit/T3200/images/plots/" + str(time.time_ns()) + ".tex",
             axis_width = "18cm",
-            axis_height = "6cm",
+            axis_height = "10cm",
             textsize = 10.0,
             flavor = "latex"
         )
 
     return(data)
 
+# =============================================================================
+# meanNearestInfrastructure
+# Find out mean distance to closest infrastructure of given list of points
+# using closest_node
+# CAUTION: VERY TIME CONSUMING CALCULATION, FEATURE CALCULATION RISES FROM
+# 30MIN TO 12HOURS AND MORE BECAUSE OF THIS CALCULATION!
+# See: https://codereview.stackexchange.com/questions/28207/finding-the-closest-point-to-a-list-of-points
+#
+# Parameter:
+#   df - DataFrame of gps-file
+#   dbInfrastructure - list of df Infrastructure points (window)
+#
+# Returns:
+#   distance - distance to nearest point in the window
+# =============================================================================  
 def meanNearestInfrastructure(df, dbInfrastructure):  
     points = pd.DataFrame()
     points['Latitude'] = df['Latitude'] 
     points['Longitude'] = df['Longitude']
     allPoints = list(points.itertuples(index=False, name=None))
-    
-    # tl_point = ((df['Latitude'].max + 0.5), (df['Longitude'].min - 0.5))
-    # tr_point = ((df['Latitude'].max + 0.5), (df['Longitude'].max + 0.5))
-    # bl_point = ((df['Latitude'].min - 0.5), (df['Longitude'].min - 0.5))
-    # br_point = ((df['Latitude'].min - 0.5), (df['Longitude'].max + 0.5))  
-        
+            
+    ###########################################################################
+    ### Calculate mean distance to infrastructure of all given points
+    ### USE FEWER POINTS (CALCULATE 1, JUMP 1 ...or sth. like this) TO SAVE
+    ### CALCULATION TIME - NOT IMPLEMENTED YET
+    ###########################################################################
     distance = 0.0
     for point in allPoints:
         node = closest_node(point, dbInfrastructure)
@@ -246,25 +270,31 @@ def meanNearestInfrastructure(df, dbInfrastructure):
     distance = distance / len(allPoints)
     return distance
 
-# https://codereview.stackexchange.com/questions/28207/finding-the-closest-point-to-a-list-of-points
+# =============================================================================
+# closest_node
+# Finding the closest point to a list of points
+# Parameter:
+#   node - point to which the shortest distance is to be determinded
+#   nodes - points of the db infrastructure
+#
+# Returns:
+#   node - point with the shortest distance to input node
+# =============================================================================  
 def closest_node(node, nodes):
     closest_index = dis.cdist([node], nodes).argmin()
     return nodes[closest_index]
 
+# =============================================================================
+# ml_csv
+# Creates a DataFrame with the ML features from the DataFrame of a csv file 
+# Parameter:
+#   df - DataFrame of gps-file 
+#
+# Returns:
+#   data - DataFrame with ML features
+# =============================================================================  
 def ml_csv(df, printReq=False):
-    """
-    Erstellt aus dem DataFrame einer csv-Datei ein DataFrame mit den ML-Features.
 
-    Parameters
-    ----------
-    df : Pandas.DataFrame
-        Eine GPS-Datei, die in einem DataFrame eingelesen wurde.
-
-    Returns
-    -------
-    DataFrame mit ML-Features.
-
-    """
     times_total, times_diff, distances_total, distances_diff, speedGoogle = get_data(df)
     data = calculate_data(times_total, times_diff, distances_total, distances_diff, speedGoogle, printReq) 
 
